@@ -1,9 +1,18 @@
 ﻿@page "/"
+@using Blazor.Diagrams.Components
+@using ForkHierarchy.Services;
+@inject HierachyBuilder HierachyBuilder
 
 <PageTitle>Index</PageTitle>
+<style>
+    html {
+        background-color: red;
+    }
+</style>
+<div style="background-color: green">
 
-<h1>Hello, world!</h1>
-
-Welcome to your new app.
-
-<SurveyPrompt Title="How is Blazor working for you?" />
+    <!-- Add this where you want to show the diagram -->
+        <CascadingValue Value="Diagram">
+    <DiagramCanvas></DiagramCanvas>
+    </CascadingValue>
+</div>

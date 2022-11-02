@@ -8,7 +8,7 @@ builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 builder.Services.AddScoped<GitHubClient>(x =>
 {
-    string? pat = x.GetService<IConfiguration>()?.GetValue<string>("Secrets:GitHubPAT");
+    string? pat = builder.Configuration?.GetValue<string>("Secrets:GitHubPAT");
 
     var client = new GitHubClient(new ProductHeaderValue("AlmightyLks"));
     client.Credentials = new Credentials(pat);
