@@ -1,0 +1,53 @@
+﻿.container {
+    width: 75%;
+}
+
+.list-group-item.left-side-50 {
+    margin: 0 0 -1px;
+    float: left;
+    width: 50%;
+    max-width: 50%;
+    min-width: 50%;
+    border-bottom-width: 0px;
+}
+
+.list-group-item.right-side-50 {
+    margin: 0 0 -1px;
+    float: left;
+    width: 50%;
+    max-width: 50%;
+    min-width: 50%;
+    border-bottom-width: 0px;
+}
+
+
+.list-group-item.left-side {
+    margin: 0 0 -1px;
+    float: left;
+    width: 30%;
+    max-width: 30%;
+    min-width: 30%;
+    border-bottom-width: 0px;
+}
+
+.list-group-item.right-side {
+    margin: 0 0 -1px;
+    float: left;
+    width: 70%;
+    max-width: 70%;
+    min-width: 70%;
+    border-bottom-width: 0px;
+}
+
+.split-items .list-group-item.left-side {
+    border-top-right-radius: 0px;
+    border-bottom-right-radius: 0px;
+}
+
+.split-items .list-group-item.right-side {
+    border-top-left-radius: 0px;
+    border-bottom-left-radius: 0px;
+    border-bottom-right-radius: 0px;
+    border-top-right-radius: 4px;
+    border-left: 0;
+}

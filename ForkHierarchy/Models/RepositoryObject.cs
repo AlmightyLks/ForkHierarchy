@@ -4,6 +4,6 @@ namespace ForkHierarchy.Models;
 
 public class RepositoryObject
 {
-    public Repository? Repository { get; set; }
-    public List<RepositoryObject>? Forks { get; set; }
+    public Repository Repository { get; set; } = null!;
+    public List<RepositoryObject> Forks { get; set; } = new List<RepositoryObject>();
 }

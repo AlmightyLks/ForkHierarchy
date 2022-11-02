@@ -12,4 +12,8 @@
 		<PackageReference Include="Z.Blazor.Diagrams" Version="2.1.6" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <Folder Include="wwwroot\Assets\" />
+	</ItemGroup>
+
 </Project>

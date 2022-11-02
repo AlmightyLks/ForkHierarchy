@@ -1,6 +1,10 @@
 using Blazor.Diagrams.Core;
 using Blazor.Diagrams.Core.Geometry;
 using Blazor.Diagrams.Core.Models;
+using ForkHierarchy.Components;
+using ForkHierarchy.Models;
+using ForkHierarchy.Services;
+using Microsoft.AspNetCore.Components;
 
 namespace ForkHierarchy.Pages
 {
@@ -8,60 +12,77 @@ namespace ForkHierarchy.Pages
     {
         public Diagram Diagram { get; set; } = null!;
 
+        public bool Rendering { get; set; }
+        public bool FromSource { get; set; } = true;
+        public string? RepositoryUrl { get; set; } = "https://github.com/DukeFloppa/SynapseNMG";
+
+        [Inject]
+        public HierachyBuilder HierachyBuilder { get; set; } = null!;
+
         protected override void OnInitialized()
         {
             base.OnInitialized();
 
             var options = new DiagramOptions
             {
-                DeleteKey = "Delete", // What key deletes the selected nodes/links
                 DefaultNodeComponent = null, // Default component for nodes
-                AllowMultiSelection = true, // Whether to allow multi selection using CTRL
-                Links = new DiagramLinkOptions
-                {
-                    // Options related to links
-                },
+                EnableVirtualization = false,
                 Zoom = new DiagramZoomOptions
                 {
-                    Minimum = 0.5, // Minimum zoom value
-                    Inverse = false, // Whether to inverse the direction of the zoom when using the wheel
-                                     // Other
+                    Minimum = 0.1, // Minimum zoom value
+                    Maximum = 5_000, // Minimum zoom value
+                    ScaleFactor = 2,
+                    Inverse = true, // Whether to inverse the direction of the zoom when using the wheel
+                                    // Other
                 }
             };
             Diagram = new Diagram(options);
-            Setup();
+            Diagram.RegisterModelComponent<RepositoryNodeModel, RepositoryNode>();
+
             StateHasChanged();
         }
-
-        private void Setup()
+        public async Task RenderGraph()
         {
-            var node1 = NewNode(50, 50);
-            var node2 = NewNode(300, 300);
-            var node3 = NewNode(300, 50);
-            Diagram.Nodes.Add(new[] { node1, node2, node3 });
-            Diagram.Links.Add(new LinkModel(node1.GetPort(PortAlignment.Right), node2.GetPort(PortAlignment.Left)));
+            if (String.IsNullOrWhiteSpace(RepositoryUrl))
+                return;
+
+            Diagram.Nodes.Clear();
+
+            Rendering = true;
+
+            RepositoryUrl = RepositoryUrl.Replace(".git", "");
+            var vals = RepositoryUrl.Split('/').TakeLast(2).ToArray();
+
+            var root = await HierachyBuilder.Gather(vals[0], vals[1], FromSource);
+            var curRoot = new RepositoryNodeModel(root, new Point(100, 100));
+            curRoot.Size = new Size(100, 100);
+            RenderNode(curRoot, null);
+
+            Rendering = false;
         }
-
-        private NodeModel NewNode(double x, double y)
+        public void RenderNode(RepositoryNodeModel current, RepositoryNodeModel? parent, int gen = 1)
         {
-            var node = new NodeModel(new Point(x, y));
-            node.AddPort(PortAlignment.Bottom);
-            node.AddPort(PortAlignment.Top);
-            node.AddPort(PortAlignment.Left);
-            node.AddPort(PortAlignment.Right);
-            return node;
-        }
+            Diagram.Nodes.Add(current);
 
-
-
-        protected override async Task OnAfterRenderAsync(bool firstRender)
-        {
-            if (firstRender)
+            if (parent is not null)
             {
+                Diagram.Links.Add(new LinkModel(parent, current)
+                {
+                    TargetMarker = LinkMarker.Arrow
+                });
+            }
 
-                //var foo = await HierachyBuilder.Gather("SynapseSL", "Synapse");
-                //var foo = await HierachyBuilder.Gather("wind4000", "vits");
-                //var foo = await HierachyBuilder.Gather("AlmightyLks", "ForkHierarchy").ToListAsync();
+            double angle = 360.0 / current.RepositoryObject.Forks.Count * Math.PI / 180.0;
+
+            for (int i = 0; i < current.RepositoryObject.Forks.Count; i++)
+            {
+                var fork = current.RepositoryObject.Forks[i];
+
+                var x = current!.Position.X + Math.Cos(angle * i) * (100 * current.RepositoryObject.Forks.Count);
+                var y = current!.Position.Y + Math.Sin(angle * i) * (100 * current.RepositoryObject.Forks.Count);
+                var newCur = new RepositoryNodeModel(fork, new Point(x, y));
+                newCur.Size = new Size(100, 100);
+                RenderNode(newCur, current, ++gen);
             }
         }
     }
