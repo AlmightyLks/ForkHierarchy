@@ -1,4 +1,5 @@
-﻿using ForkHierarchy.Models;
+﻿using Blazor.Diagrams.Core.Models;
+using ForkHierarchy.Models;
 using Octokit;
 
 namespace ForkHierarchy.Services;
@@ -12,7 +13,7 @@ public class HierachyBuilder
         _client = client;
     }
 
-    public async Task<RepositoryObject> Gather(string owner, string name, bool fromSource = true)
+    public async Task<TreeNodeModel<Repository>> GetRepositoryAsync(string owner, string name, bool fromSource = true)
     {
         // Get Target Repo
         // If we want all repos beginning from source, get source if it has one
@@ -20,25 +21,25 @@ public class HierachyBuilder
         if (fromSource && repository.Source is not null)
             repository = repository.Source;
 
-        var allForks = await GetAllForkRepositoriesAsync(repository.Owner.Login, repository.Name).ToListAsync();
-        var rootRepo = new RepositoryObject()
-        {
-            Repository = repository,
-            Forks = allForks
-        };
+        var rootRepo = new TreeNodeModel<Repository>(repository, null, () => GetChildrenAsync(repository.Owner.Login, repository.Name));
+        rootRepo.AddPort(new NodePort(rootRepo, PortAlignment.Top));
+        rootRepo.AddPort(new NodePort(rootRepo, PortAlignment.Bottom));
         return rootRepo;
     }
 
-    public async IAsyncEnumerable<RepositoryObject> GetAllForkRepositoriesAsync(string owner, string name)
+    public async Task<List<TreeNodeModel<Repository>>> GetChildrenAsync(string owner, string name)
     {
+        var result = new List<TreeNodeModel<Repository>>();
         foreach (var fork in await _client.Repository.Forks.GetAll(owner, name))
         {
-            var obj = new RepositoryObject()
-            {
-                Repository = fork,
-                Forks = await GetAllForkRepositoriesAsync(fork.Owner.Login, fork.Name).ToListAsync()
-            };
-            yield return obj;
+            var node = new TreeNodeModel<Repository>(fork, null, () => GetChildrenAsync(fork.Owner.Login, fork.Name));
+            node.AddPort(new NodePort(node, PortAlignment.Top));
+            node.AddPort(new NodePort(node, PortAlignment.Bottom));
+            result.Add(node);
         }
+        return result;
     }
+
+    public async Task<MiscellaneousRateLimit> GetRateLimit()
+        => await _client.RateLimit.GetRateLimits();
 }

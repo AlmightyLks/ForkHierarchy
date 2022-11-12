@@ -1,25 +1,36 @@
 ﻿@using Blazor.Diagrams.Components.Renderers
-<div id="@Node.RepositoryObject.Repository.Owner.Login" class="card" style="width: 300px;">
+@using Blazor.Diagrams.Core.Models;
+
+<div id="@Node.Item.Owner.Login" class="card" style="font-size: larger;width: 300px;">
+    @if (Node.GetPort(PortAlignment.Top) is { } topPort)
+    {
+        <PortRenderer Port="topPort"></PortRenderer>
+    }
     <div class="card-header" style="text-align: center; vertical-align: central">
         <div class="clearfix split-items">
-            <h2 class="left-side-50" style="vertical-align:central;font-size: 25px; float: left; ">@Node.RepositoryObject.Repository?.Name</h2>
-            <img class="right-side-50" style="width: 75px; float: right" src="@Node.RepositoryObject.Repository?.Owner.AvatarUrl" />
+            <h2 class="left-side-50" style="vertical-align:central;font-size: 25px; float: left; ">@Node.Item?.Name</h2>
+            <img class="right-side-50" style="width: 75px; float: right" src="@Node.Item?.Owner.AvatarUrl" />
         </div>
     </div>
     <div class="card-body" style="padding: 5px 5px 5px 5px; text-align: center; vertical-align: central">
         <div class="list-group list-group-flush">
             <div class="clearfix split-items">
                 <div href="#" class="list-group-item left-side" style="text-decoration: underline">Owner</div>
-                <div href="#" class="list-group-item right-side ">@Node.RepositoryObject.Repository!.Owner.Login</div>
+                <div href="#" class="list-group-item right-side ">@Node.Item!.Owner.Login</div>
             </div>
             <div class="clearfix split-items">
                 <div href="#" class="list-group-item left-side">Forks</div>
-                <div href="#" class="list-group-item right-side ">@Node.RepositoryObject.Forks.Count</div>
+                <div href="#" class="list-group-item right-side ">@Node.Item.ForksCount</div>
             </div>
             <div class="clearfix split-items">
                 <div href="#" class="list-group-item left-side">Stars</div>
-                <div href="#" class="list-group-item right-side ">@Node.RepositoryObject.Repository.StargazersCount</div>
+                <div href="#" class="list-group-item right-side ">@Node.Item.StargazersCount</div>
             </div>
         </div>
     </div>
+
+    @if (Node.GetPort(PortAlignment.Bottom) is { } botPort)
+    {
+        <PortRenderer Port="botPort"></PortRenderer>
+    }
 </div>

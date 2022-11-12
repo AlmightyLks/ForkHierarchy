@@ -24,18 +24,18 @@
 .list-group-item.left-side {
     margin: 0 0 -1px;
     float: left;
-    width: 30%;
-    max-width: 30%;
-    min-width: 30%;
+    width: 35%;
+    max-width: 35%;
+    min-width: 35%;
     border-bottom-width: 0px;
 }
 
 .list-group-item.right-side {
     margin: 0 0 -1px;
     float: left;
-    width: 70%;
-    max-width: 70%;
-    min-width: 70%;
+    width: 65%;
+    max-width: 65%;
+    min-width: 65%;
     border-bottom-width: 0px;
 }
 

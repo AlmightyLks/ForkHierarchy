@@ -152,8 +152,8 @@
     all: unset;
 }
 
-html {
-    background-color: lightpink;
+* {
+    overflow: hidden;
 }
 
 .spinner {
