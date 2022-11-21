@@ -1,6 +1,6 @@
 using Blazor.Diagrams.Core;
-using Blazor.Diagrams.Core.Geometry;
 using Blazor.Diagrams.Core.Models;
+using Blazor.Diagrams.Core.Models.Base;
 using ForkHierarchy.Components;
 using ForkHierarchy.Helpers;
 using ForkHierarchy.Models;
@@ -20,8 +20,9 @@ namespace ForkHierarchy.Pages
         public Diagram Diagram { get; set; } = null!;
         public bool Rendering { get; set; }
         public bool FromSource { get; set; } = true;
-        public string RepositoryUrl { get; set; } = "https://github.com/jaywalnut310/vits/";
-        //public string RepositoryUrl { get; set; } = "https://github.com/SynapseSL/Synapse/";
+
+        //public string RepositoryUrl { get; set; } = "https://github.com/jaywalnut310/vits/";
+        public string RepositoryUrl { get; set; } = "https://github.com/SynapseSL/Synapse/";
 
         private TreeNodeModel<Repository> _rootNode;
 
@@ -38,7 +39,7 @@ namespace ForkHierarchy.Pages
                 Zoom = new DiagramZoomOptions
                 {
                     Minimum = 0.1, // Minimum zoom value
-                    Maximum = 5_000, // Minimum zoom value
+                    Maximum = 5_000, // Maximum zoom value
                     ScaleFactor = 1.45,
                     Inverse = true, // Whether to inverse the direction of the zoom when using the wheel
                                     // Other
@@ -46,8 +47,77 @@ namespace ForkHierarchy.Pages
             };
             Diagram = new Diagram(options);
             Diagram.RegisterModelComponent<TreeNodeModel<Repository>, RepositoryNode>();
+            Diagram.SelectionChanged += Diagram_SelectionChanged;
+            //Diagram.MouseClick += Diagram_MouseClick;
 
             StateHasChanged();
+        }
+
+        private void Diagram_MouseClick(Model model, Microsoft.AspNetCore.Components.Web.MouseEventArgs arg2)
+        {
+            if (model is null)
+            {
+                foreach (var dNode in Diagram.Nodes)
+                {
+                    if (dNode is TreeNodeModel<Repository> dNodeModel)
+                    {
+                        dNodeModel.RepositoryNode.Opacity = 1f;
+                    }
+                }
+            }
+            else
+            {
+                var nodeModel = model as TreeNodeModel<Repository>;
+
+                foreach (var dNode in Diagram.Nodes)
+                {
+                    if (dNode is TreeNodeModel<Repository> dNodeModel)
+                    {
+                        dNodeModel.RepositoryNode.Opacity = 0.25f;
+                    }
+                }
+
+                while (nodeModel is not null)
+                {
+                    nodeModel.RepositoryNode.Opacity = 1f;
+                    nodeModel = nodeModel.Parent;
+                }
+            }
+        }
+
+        private void Diagram_SelectionChanged(SelectableModel obj)
+        {
+            /*
+            if (obj.Selected)
+            {
+                foreach (var dNode in Diagram.Nodes)
+                {
+                    if (dNode is TreeNodeModel<Repository> nodeModel)
+                    {
+                        nodeModel.RepositoryNode.Opacity = 0.25f;
+                    }
+                }
+
+                if (obj.Selected && obj is TreeNodeModel<Repository> node)
+                {
+                    while (node is not null)
+                    {
+                        node.RepositoryNode.Opacity = 1f;
+                        node = node.Parent;
+                    }
+                }
+            }
+            else
+            {
+                foreach (var dNode in Diagram.Nodes)
+                {
+                    if (dNode is TreeNodeModel<Repository> nodeModel)
+                    {
+                        nodeModel.RepositoryNode.Opacity = 1f;
+                    }
+                }
+            }
+            */
         }
 
         public async Task UserRender()
@@ -56,31 +126,35 @@ namespace ForkHierarchy.Pages
                 return;
             RepositoryUrl = RepositoryUrl.Replace(".git", "").Trim('/');
 
+            Diagram.SuspendRefresh = true;
             Rendering = true;
+            RepositoryNode.SupressRender = true;
             if (!String.IsNullOrWhiteSpace(RepositoryUrl) && RepositoryUrl != _lastRepository)
             {
                 var vals = RepositoryUrl!.Split('/').TakeLast(2).ToArray();
 
                 _rootNode = await HierachyBuilder.GetRepositoryAsync(vals[0], vals[1], FromSource);
-                _rootNode.Position = new Point(Diagram.Pan.X, Diagram.Pan.Y);
-                _rootNode.Size = new Size(100, 100);
+                //_rootNode.Position = new Point(Diagram.Pan.X, Diagram.Pan.Y);
+                _rootNode.Size = RepositoryNode.Size;
                 _lastRepository = RepositoryUrl;
             }
 
+            Diagram.Links.Clear();
             Diagram.Nodes.Clear();
 
-            await TreeHelpers<Repository>.CalculateNodePositions(_rootNode);
+            await TreeHelpers<Repository>.CalculateNodePositions(_rootNode, async (node) => await RenderNodeAsync(node, node.Parent));
 
-            await RenderNodeAsync(_rootNode, null);
+            //await RenderNodeAsync(_rootNode, null);
+
+            Diagram.CenterOnNode(_rootNode, 1_500);
+
+            //Diagram.SetZoom(1);
 
             Rendering = false;
+            RepositoryNode.SupressRender = true;
+            Diagram.SuspendRefresh = false;
         }
 
-        /// <summary>
-        /// Renders a Node-Circle based around parents of forks
-        /// </summary>
-        /// <param name="current">Root Node</param>
-        /// <param name="parent">Root Node's parent node</param>
         public async Task RenderNodeAsync(TreeNodeModel<Repository> current, TreeNodeModel<Repository> parent)
         {
             Diagram.Nodes.Add(current);
@@ -96,61 +170,13 @@ namespace ForkHierarchy.Pages
                 Diagram.Links.Add(link);
             }
 
+            /*
             foreach (var child in await current.GetChildrenAsync())
             {
-                child.Size = new Size(100, 100);
+                child.Size = RepositoryNode.Size;
                 await RenderNodeAsync(child, current);
             }
+            */
         }
-
-        // TODO:
-        // For an actual hierachy I need to write an algorithm for the positions.
-        // For whatever reason, I cannot find any implementations or hints for it online
-
-        //public void RenderNodes()
-        //{
-        //    RepositoryNodeGenerations.Clear();
-
-        //    /*
-        //    for (int i = 0; i < RepositoryNodeGenerations.Count; i++)
-        //    {
-        //        var generation = RepositoryNodeGenerations[i];
-        //        for (int j = 0; j < generation.Count; j++)
-        //        {
-        //            var node = generation[i];
-
-        //            node.SetPosition();
-
-        //            Diagram.Nodes.Add(node);
-
-        //            if (node.Parent is not null)
-        //            {
-        //                Diagram.Links.Add(new LinkModel(node.Parent, node)
-        //                {
-        //                    TargetMarker = LinkMarker.Arrow
-        //                });
-        //            }
-
-
-        //        }
-        //    }
-        //    */
-
-        //    /*
-        //    const int NodeWidth = 300;
-        //    const int Spacer = 300;
-
-        //    var maxElementsGen = RepositoryNodeGenerations.MaxBy(x => x.Count)!;
-        //    var genIndex = RepositoryNodeGenerations.IndexOf(maxElementsGen);
-
-        //    //var maxRowSize = (maxElementsFromGen * NodeWidth) + (maxElementsFromGen - 1 * Spacer);
-
-        //    var root = RepositoryNodeGenerations[0][0];
-        //    foreach (var generation in Enumerable.Reverse(RepositoryNodeGenerations))
-        //    {
-
-        //    }
-        //    */
-        //}
     }
 }

@@ -1,36 +1,49 @@
 ﻿@using Blazor.Diagrams.Components.Renderers
 @using Blazor.Diagrams.Core.Models;
 
-<div id="@Node.Item.Owner.Login" class="card" style="font-size: larger;width: 300px;">
-    @if (Node.GetPort(PortAlignment.Top) is { } topPort)
-    {
-        <PortRenderer Port="topPort"></PortRenderer>
-    }
-    <div class="card-header" style="text-align: center; vertical-align: central">
-        <div class="clearfix split-items">
-            <h2 class="left-side-50" style="vertical-align:central;font-size: 25px; float: left; ">@Node.Item?.Name</h2>
-            <img class="right-side-50" style="width: 75px; float: right" src="@Node.Item?.Owner.AvatarUrl" />
-        </div>
-    </div>
-    <div class="card-body" style="padding: 5px 5px 5px 5px; text-align: center; vertical-align: central">
-        <div class="list-group list-group-flush">
-            <div class="clearfix split-items">
-                <div href="#" class="list-group-item left-side" style="text-decoration: underline">Owner</div>
-                <div href="#" class="list-group-item right-side ">@Node.Item!.Owner.Login</div>
-            </div>
-            <div class="clearfix split-items">
-                <div href="#" class="list-group-item left-side">Forks</div>
-                <div href="#" class="list-group-item right-side ">@Node.Item.ForksCount</div>
-            </div>
-            <div class="clearfix split-items">
-                <div href="#" class="list-group-item left-side">Stars</div>
-                <div href="#" class="list-group-item right-side ">@Node.Item.StargazersCount</div>
-            </div>
-        </div>
-    </div>
+<div style="opacity: @(Opacity.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture))">
+    <MudCard class="selectedGlow" style="width: 300px">
+        @{
+            Console.WriteLine($"{DateTime.Now} {counter++} Lmaoooo");
+        }
 
-    @if (Node.GetPort(PortAlignment.Bottom) is { } botPort)
-    {
-        <PortRenderer Port="botPort"></PortRenderer>
-    }
+        @if (Node.GetPort(PortAlignment.Top) is { } topPort)
+        {
+            <PortRenderer Port="topPort"></PortRenderer>
+        }
+
+        <MudCardContent>
+            <MudText Typo="Typo.h5"><a href="@Node.Item?.HtmlUrl" target="_blank">@Node.Item?.Name</a></MudText>
+        </MudCardContent>
+
+        <MudCardMedia Image="@Node.Item?.Owner.AvatarUrl" Height="100" />
+
+        <MudCardContent>
+            <MudText>Name</MudText>
+            <MudText Typo="Typo.body2">@Node.Item?.Name</MudText>
+        </MudCardContent>
+
+        <MudCardContent>
+            <MudText>Owner</MudText>
+            <MudText Typo="Typo.body2">@Node.Item!.Owner.Login</MudText>
+        </MudCardContent>
+
+        <MudCardContent>
+            <MudText>Forks</MudText>
+            <MudText Typo="Typo.body2">@Node.Item?.ForksCount</MudText>
+        </MudCardContent>
+
+        <MudCardContent>
+            <MudText>Stars</MudText>
+            <MudText Typo="Typo.body2">@Node.Item?.StargazersCount</MudText>
+        </MudCardContent>
+
+        @if (Node.GetPort(PortAlignment.Bottom) is { } botPort)
+        {
+            <PortRenderer Port="botPort"></PortRenderer>
+        }
+    </MudCard>
 </div>
+@code{
+    static int counter = 1;
+}

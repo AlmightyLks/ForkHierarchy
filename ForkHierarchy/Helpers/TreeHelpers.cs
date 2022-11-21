@@ -1,5 +1,4 @@
-﻿using Blazor.Diagrams.Core.Geometry;
-using ForkHierarchy.Models;
+﻿using ForkHierarchy.Models;
 
 #nullable disable
 
@@ -8,12 +7,12 @@ namespace ForkHierarchy.Helpers;
 public static class TreeHelpers<T>
         where T : class
 {
-    private const int nodeSize = 300;
-    private const double depthDistance = 500;
-    private const double siblingDistance = 300;
-    private const double treeDistance = 500;
+    private const int nodeSize = 500;
+    private const double depthDistance = 1250;
+    private const double siblingDistance = 25;
+    private const double treeDistance = 150;
 
-    public static async Task CalculateNodePositions(TreeNodeModel<T> rootNode)
+    public static async Task CalculateNodePositions(TreeNodeModel<T> rootNode, Action<TreeNodeModel<T>> positionSet)
     {
         // initialize node x, y, and mod values
         await InitializeNodes(rootNode, 0);
@@ -25,13 +24,13 @@ public static class TreeHelpers<T>
         await CheckAllChildrenOnScreen(rootNode);
 
         // assign final X values to nodes
-        await CalculateFinalPositions(rootNode, 0);
+        await CalculateFinalPositions(rootNode, 0, positionSet);
     }
 
     // recusrively initialize x, y, and mod values of nodes
     private static async Task InitializeNodes(TreeNodeModel<T> node, int depth)
     {
-        node.Size = new Size();
+        //node.Size = new Size();
         node.X = -1;
         node.Y = depth * depthDistance;
         node.Mod = 0;
@@ -40,7 +39,7 @@ public static class TreeHelpers<T>
             await InitializeNodes(child, depth + 1);
     }
 
-    private static async Task CalculateFinalPositions(TreeNodeModel<T> node, double modSum)
+    private static async Task CalculateFinalPositions(TreeNodeModel<T> node, double modSum, Action<TreeNodeModel<T>> positionSet)
     {
         node.X += modSum;
         modSum += node.Mod;
@@ -48,8 +47,11 @@ public static class TreeHelpers<T>
         var children = await node.GetChildrenAsync();
 
         foreach (var child in children)
-            await CalculateFinalPositions(child, modSum);
+            await CalculateFinalPositions(child, modSum, positionSet);
 
+        positionSet(node);
+
+        /*
         if (children.Count == 0)
         {
             node.Size.Width = node.X;
@@ -60,6 +62,7 @@ public static class TreeHelpers<T>
             node.Size.Width = children.Max(p => p.Size.Width);
             node.Size.Height = children.Max(p => p.Size.Height);
         }
+        */
     }
 
     private static async Task CalculateInitialX(TreeNodeModel<T> node)

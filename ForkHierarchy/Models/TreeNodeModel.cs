@@ -3,6 +3,7 @@
 
 using Blazor.Diagrams.Core.Geometry;
 using Blazor.Diagrams.Core.Models;
+using ForkHierarchy.Components;
 
 namespace ForkHierarchy.Models;
 
@@ -13,6 +14,7 @@ public class TreeNodeModel<T> : NodeModel
     public double Y { get => Position.Y; set => Position = new Point(Position.X, value); }
     public double Mod { get; set; }
     public TreeNodeModel<T> Parent { get; set; }
+    public RepositoryNode RepositoryNode { get; set; }
 
     private List<TreeNodeModel<T>> _children;
     private Func<Task<List<TreeNodeModel<T>>>> _gatherChildrenFunc;

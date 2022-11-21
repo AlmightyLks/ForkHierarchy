@@ -155,6 +155,9 @@
 * {
     overflow: hidden;
 }
+body{
+    margin: 0;
+}
 
 .spinner {
     border: 16px solid silver;

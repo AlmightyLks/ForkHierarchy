@@ -1,13 +1,24 @@
 ﻿@inherits LayoutComponentBase
 
-<PageTitle>ForkHierarchy</PageTitle>
+<MudThemeProvider IsDarkMode="true"/>
+<MudDialogProvider />
+<MudSnackbarProvider />
 
+<PageTitle>ForkHierarchy</PageTitle>
+@*
 <div>
-@*    <div class="sidebar">
+    <div class="sidebar">
         <NavMenu />
-    </div>*@
+    </div>
 
     <main>
         @Body
     </main>
 </div>
+*@
+
+<MudLayout>
+    <MudMainContent>
+        @Body
+    </MudMainContent>
+</MudLayout>

@@ -1,9 +1,11 @@
 using ForkHierarchy.Services;
+using MudBlazor.Services;
 using Octokit;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.Services.AddMudServices();
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 builder.Services.AddScoped<GitHubClient>(x =>
@@ -66,7 +68,6 @@ builder.Services.AddRateLimiter(limiterOptions =>
     });
 });
 */
-
 
 var app = builder.Build();
 
