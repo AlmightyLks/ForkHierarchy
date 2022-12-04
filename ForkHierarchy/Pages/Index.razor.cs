@@ -1,182 +1,127 @@
-using Blazor.Diagrams.Core;
-using Blazor.Diagrams.Core.Models;
-using Blazor.Diagrams.Core.Models.Base;
-using ForkHierarchy.Components;
-using ForkHierarchy.Helpers;
-using ForkHierarchy.Models;
-using ForkHierarchy.Services;
-using Microsoft.AspNetCore.Components;
-using Octokit;
-
 #nullable disable
+
+using Database;
+using ForkHierarchy.Components;
+using ForkHierarchy.Core.Mapping;
+using ForkHierarchy.Core.Models;
+using ForkHierarchy.Core.Options;
+using Microsoft.AspNetCore.Components;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using MudBlazor;
+using Octokit;
+using System.Text.RegularExpressions;
 
 namespace ForkHierarchy.Pages
 {
-    public partial class Index
+    public partial class Index : IDisposable
     {
+        private static readonly DialogOptions MaxWidthOptions = new DialogOptions()
+        {
+            //MaxWidth = MaxWidth.Medium,
+            //FullWidth = true,
+            CloseButton = true,
+            CloseOnEscapeKey = true
+        };
+
+        public string SearchText { get; set; }
+        public bool FromSource { get; set; }
+
+        public Regex RepoFullNameRegEx { get; } = new Regex("^\\w+\\/\\w+$");
+
         [Inject]
-        public HierachyBuilder HierachyBuilder { get; set; } = null!;
+        public GitHubClient GitHubClient { get; set; }
 
-        public Diagram Diagram { get; set; } = null!;
-        public bool Rendering { get; set; }
-        public bool FromSource { get; set; } = true;
+        [Inject]
+        public IOptions<GitHubOptions> GitHubOptions { get; set; }
 
-        //public string RepositoryUrl { get; set; } = "https://github.com/jaywalnut310/vits/";
-        public string RepositoryUrl { get; set; } = "https://github.com/SynapseSL/Synapse/";
+        [Inject]
+        public ForkHierarchyContext DbContext { get; set; }
 
-        private TreeNodeModel<Repository> _rootNode;
+        [Inject]
+        public ISnackbar Snackbar { get; set; }
 
-        private string _lastRepository;
+        [Inject]
+        public IDialogService Dialog { get; set; }
 
-        protected override void OnInitialized()
+        private RepositoryNodeModel _foundRepository;
+
+        public async Task Search()
         {
-            base.OnInitialized();
-
-            var options = new DiagramOptions
-            {
-                DefaultNodeComponent = null, // Default component for nodes
-                EnableVirtualization = false,
-                Zoom = new DiagramZoomOptions
-                {
-                    Minimum = 0.1, // Minimum zoom value
-                    Maximum = 5_000, // Maximum zoom value
-                    ScaleFactor = 1.45,
-                    Inverse = true, // Whether to inverse the direction of the zoom when using the wheel
-                                    // Other
-                }
-            };
-            Diagram = new Diagram(options);
-            Diagram.RegisterModelComponent<TreeNodeModel<Repository>, RepositoryNode>();
-            Diagram.SelectionChanged += Diagram_SelectionChanged;
-            //Diagram.MouseClick += Diagram_MouseClick;
-
-            StateHasChanged();
-        }
-
-        private void Diagram_MouseClick(Model model, Microsoft.AspNetCore.Components.Web.MouseEventArgs arg2)
-        {
-            if (model is null)
-            {
-                foreach (var dNode in Diagram.Nodes)
-                {
-                    if (dNode is TreeNodeModel<Repository> dNodeModel)
-                    {
-                        dNodeModel.RepositoryNode.Opacity = 1f;
-                    }
-                }
-            }
-            else
-            {
-                var nodeModel = model as TreeNodeModel<Repository>;
-
-                foreach (var dNode in Diagram.Nodes)
-                {
-                    if (dNode is TreeNodeModel<Repository> dNodeModel)
-                    {
-                        dNodeModel.RepositoryNode.Opacity = 0.25f;
-                    }
-                }
-
-                while (nodeModel is not null)
-                {
-                    nodeModel.RepositoryNode.Opacity = 1f;
-                    nodeModel = nodeModel.Parent;
-                }
-            }
-        }
-
-        private void Diagram_SelectionChanged(SelectableModel obj)
-        {
-            /*
-            if (obj.Selected)
-            {
-                foreach (var dNode in Diagram.Nodes)
-                {
-                    if (dNode is TreeNodeModel<Repository> nodeModel)
-                    {
-                        nodeModel.RepositoryNode.Opacity = 0.25f;
-                    }
-                }
-
-                if (obj.Selected && obj is TreeNodeModel<Repository> node)
-                {
-                    while (node is not null)
-                    {
-                        node.RepositoryNode.Opacity = 1f;
-                        node = node.Parent;
-                    }
-                }
-            }
-            else
-            {
-                foreach (var dNode in Diagram.Nodes)
-                {
-                    if (dNode is TreeNodeModel<Repository> nodeModel)
-                    {
-                        nodeModel.RepositoryNode.Opacity = 1f;
-                    }
-                }
-            }
-            */
-        }
-
-        public async Task UserRender()
-        {
-            if (String.IsNullOrWhiteSpace(RepositoryUrl))
+            if (String.IsNullOrWhiteSpace(SearchText))
                 return;
-            RepositoryUrl = RepositoryUrl.Replace(".git", "").Trim('/');
 
-            Diagram.SuspendRefresh = true;
-            Rendering = true;
-            RepositoryNode.SupressRender = true;
-            if (!String.IsNullOrWhiteSpace(RepositoryUrl) && RepositoryUrl != _lastRepository)
+            if (!RepoFullNameRegEx.IsMatch(SearchText))
             {
-                var vals = RepositoryUrl!.Split('/').TakeLast(2).ToArray();
-
-                _rootNode = await HierachyBuilder.GetRepositoryAsync(vals[0], vals[1], FromSource);
-                //_rootNode.Position = new Point(Diagram.Pan.X, Diagram.Pan.Y);
-                _rootNode.Size = RepositoryNode.Size;
-                _lastRepository = RepositoryUrl;
+                Snackbar.Add("Invalid Input", Severity.Error);
+                return;
             }
 
-            Diagram.Links.Clear();
-            Diagram.Nodes.Clear();
+            _foundRepository = null;
 
-            await TreeHelpers<Repository>.CalculateNodePositions(_rootNode, async (node) => await RenderNodeAsync(node, node.Parent));
+            var vals = SearchText.Split('/').TakeLast(2).ToArray();
+            try
+            {
+                var repo = await GitHubClient.Repository.Get(vals[0], vals[1]);
+                if (FromSource)
+                    repo = repo.Source ?? repo;
 
-            //await RenderNodeAsync(_rootNode, null);
+                if (repo.ForksCount > GitHubOptions.Value.MaxForks)
+                {
+                    Snackbar.Add($"Target Repository Exceeds max allowed Forks of {GitHubOptions.Value.MaxForks}", Severity.Error);
+                    return;
+                }
 
-            Diagram.CenterOnNode(_rootNode, 1_500);
+                var dbo = await DbContext.GitHubRepositories.Include(x => x.Owner).FirstOrDefaultAsync(x => x.FullName == SearchText);
+                var dto = dbo?.ToDto() ?? new GitHubRepository(repo);
+                _foundRepository = new RepositoryNodeModel(dto);
 
-            //Diagram.SetZoom(1);
-
-            Rendering = false;
-            RepositoryNode.SupressRender = true;
-            Diagram.SuspendRefresh = false;
+                await OpenDialogAsync();
+            }
+            catch (NotFoundException)
+            {
+                Snackbar.Add($"Could not find the target repository", Severity.Error);
+            }
         }
 
-        public async Task RenderNodeAsync(TreeNodeModel<Repository> current, TreeNodeModel<Repository> parent)
+        private async Task OpenDialogAsync()
         {
-            Diagram.Nodes.Add(current);
+            var databaseRepository = await DbContext.GitHubRepositories.Include(x => x.Owner).FirstOrDefaultAsync(x => x.FullName == _foundRepository.Item.FullName);
+            var databaseQueue = await DbContext.QueuedRepositories.FirstOrDefaultAsync(x => x.Owner == _foundRepository.Item.Owner.Login && x.Name == _foundRepository.Item.Name);
+            var repoState = State.Unknown;
 
-            if (parent is not null)
+            if (databaseRepository is not null)
+                repoState = State.Known;
+            else if (databaseQueue is not null)
+                repoState = State.Queued;
+            else
+                repoState = State.Unknown;
+
+            var parameters = new DialogParameters();
+            parameters.Add("Node", _foundRepository);
+            parameters.Add("DatabaseRepository", databaseRepository);
+            parameters.Add("DatabaseQueue", databaseQueue);
+            parameters.Add("RepoState", repoState);
+
+            var dialog = await Dialog.Show<FoundRepositoryComponent>("Found Repository Dialog", parameters, MaxWidthOptions).Result;
+
+            if (!dialog.Cancelled && repoState != State.Queued)
             {
-                var link = new LinkModel(parent, current)
+                var queueItem = new Database.Models.QueuedRepository()
                 {
-                    TargetMarker = LinkMarker.Arrow
+                    Owner = _foundRepository.Item.Owner.Login,
+                    Name = _foundRepository.Item.Name,
+                    AddedAt = DateTime.UtcNow
                 };
-                link.SetSourcePort(parent.GetPort(PortAlignment.Bottom));
-                link.SetTargetPort(current.GetPort(PortAlignment.Top));
-                Diagram.Links.Add(link);
-            }
 
-            /*
-            foreach (var child in await current.GetChildrenAsync())
-            {
-                child.Size = RepositoryNode.Size;
-                await RenderNodeAsync(child, current);
+                DbContext.QueuedRepositories.Add(queueItem);
+                DbContext.SaveChanges();
             }
-            */
+        }
+
+        public void Dispose()
+        {
+            DbContext?.Dispose();
         }
     }
 }

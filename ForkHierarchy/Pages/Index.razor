@@ -1,29 +1,16 @@
 ﻿@page "/"
 @using Blazor.Diagrams.Components
 @using ForkHierarchy.Components
-@using ForkHierarchy.Services;
 
 <PageTitle>Index</PageTitle>
 
-<MudCard Style="position: fixed; z-index: 1; right:1vw; top:1vh; width: 25em;text-align: center; padding: 1em 1em 1em 1em">
+<div style="display: flex;">
+    <MudCard class="mx-auto" Style="text-align: center; width: 25em; padding: 1em 1em 1em 1em;">
 
-    <MudTextField class="align-center" Style="min-width: 300px; width:10vw" Placeholder="GitHub Repository Url..." @bind-Value="RepositoryUrl" />
+        <MudTextField Class="align-center" Style="min-width: 300px; width:10vw" Placeholder="Owner/Repo" Colo @bind-Value="SearchText" />
 
-    <MudCheckBox class="align-center" @bind-Checked="FromSource">From Source</MudCheckBox>
+        <MudCheckBox class="align-center" @bind-Checked="FromSource">From Source</MudCheckBox>
 
-    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="UserRender">Render Graph</MudButton>
-</MudCard>
-
-<div style="z-index: -1;position: fixed;left:0; top:0;height: 100vh; width: 100%;background-color: hotpink">
-    <div>
-        <!-- Add this where you want to show the diagram -->
-        <CascadingValue Value="Diagram">
-            <DiagramCanvas></DiagramCanvas>
-        </CascadingValue>
-    </div>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Search">Search</MudButton>
+    </MudCard>
 </div>
-
-@if (Rendering)
-{
-    <div class="spinner"></div>
-}

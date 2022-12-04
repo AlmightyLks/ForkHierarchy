@@ -1,10 +1,10 @@
-﻿using ForkHierarchy.Models;
+﻿#nullable disable
 
-#nullable disable
+using ForkHierarchy.Core.Models;
 
-namespace ForkHierarchy.Helpers;
+namespace ForkHierarchy.Core.Helpers;
 
-public static class TreeHelpers<T>
+public class TreeBuilder<T>
         where T : class
 {
     private const int nodeSize = 500;
@@ -12,44 +12,51 @@ public static class TreeHelpers<T>
     private const double siblingDistance = 25;
     private const double treeDistance = 150;
 
-    public static async Task CalculateNodePositions(TreeNodeModel<T> rootNode, Action<TreeNodeModel<T>> positionSet)
+    private Action<RepositoryNodeModel> _positionSet;
+
+    public TreeBuilder(Action<RepositoryNodeModel> positionSet)
+    {
+        _positionSet = positionSet;
+    }
+
+    public void CalculateNodePositions(RepositoryNodeModel rootNode)
     {
         // initialize node x, y, and mod values
-        await InitializeNodes(rootNode, 0);
+        InitializeNodes(rootNode, 0);
 
         // assign initial X and Mod values for nodes
-        await CalculateInitialX(rootNode);
+        CalculateInitialX(rootNode);
 
         // ensure no node is being drawn off screen
-        await CheckAllChildrenOnScreen(rootNode);
+        CheckAllChildrenOnScreen(rootNode);
 
         // assign final X values to nodes
-        await CalculateFinalPositions(rootNode, 0, positionSet);
+        CalculateFinalPositions(rootNode, 0);
     }
 
     // recusrively initialize x, y, and mod values of nodes
-    private static async Task InitializeNodes(TreeNodeModel<T> node, int depth)
+    private void InitializeNodes(RepositoryNodeModel node, int depth)
     {
         //node.Size = new Size();
         node.X = -1;
         node.Y = depth * depthDistance;
         node.Mod = 0;
 
-        foreach (var child in await node.GetChildrenAsync())
-            await InitializeNodes(child, depth + 1);
+        foreach (var child in node.Children)
+            InitializeNodes(child, depth + 1);
     }
 
-    private static async Task CalculateFinalPositions(TreeNodeModel<T> node, double modSum, Action<TreeNodeModel<T>> positionSet)
+    private void CalculateFinalPositions(RepositoryNodeModel node, double modSum)
     {
         node.X += modSum;
         modSum += node.Mod;
 
-        var children = await node.GetChildrenAsync();
+        var children = node.Children;
 
         foreach (var child in children)
-            await CalculateFinalPositions(child, modSum, positionSet);
+            CalculateFinalPositions(child, modSum);
 
-        positionSet(node);
+        _positionSet(node);
 
         /*
         if (children.Count == 0)
@@ -65,19 +72,19 @@ public static class TreeHelpers<T>
         */
     }
 
-    private static async Task CalculateInitialX(TreeNodeModel<T> node)
+    private void CalculateInitialX(RepositoryNodeModel node)
     {
-        var children = await node.GetChildrenAsync();
+        var children = node.Children;
 
         foreach (var child in children)
-            await CalculateInitialX(child);
+            CalculateInitialX(child);
 
         // if no children
-        if (await node.IsLeaf())
+        if (node.IsLeaf())
         {
             // if there is a previous sibling in this set, set X to prevous sibling + designated distance
-            if (!await node.IsLeftMost())
-                node.X = (await node.GetPreviousSibling()).X + nodeSize + siblingDistance;
+            if (!node.IsLeftMost())
+                node.X = (node.GetPreviousSibling()).X + nodeSize + siblingDistance;
             else
                 // if this is the first node in a set, set X to 0
                 node.X = 0;
@@ -86,54 +93,54 @@ public static class TreeHelpers<T>
         else if (children.Count == 1)
         {
             // if this is the first node in a set, set it's X value equal to it's child's X value
-            if (await node.IsLeftMost())
+            if (node.IsLeftMost())
             {
                 node.X = children[0].X;
             }
             else
             {
-                node.X = (await node.GetPreviousSibling()).X + nodeSize + siblingDistance;
+                node.X = (node.GetPreviousSibling()).X + nodeSize + siblingDistance;
                 node.Mod = node.X - children[0].X;
             }
         }
         else
         {
-            var leftChild = await node.GetLeftMostChild();
-            var rightChild = await node.GetRightMostChild();
+            var leftChild = node.GetLeftMostChild();
+            var rightChild = node.GetRightMostChild();
             var mid = (leftChild.X + rightChild.X) / 2;
 
-            if (await node.IsLeftMost())
+            if (node.IsLeftMost())
             {
                 node.X = mid;
             }
             else
             {
-                node.X = (await node.GetPreviousSibling()).X + nodeSize + siblingDistance;
+                node.X = (node.GetPreviousSibling()).X + nodeSize + siblingDistance;
                 node.Mod = node.X - mid;
             }
         }
 
-        if (children.Count > 0 && !await node.IsLeftMost())
+        if (children.Count > 0 && !node.IsLeftMost())
         {
             // Since subtrees can overlap, check for conflicts and shift tree right if needed
-            await CheckForConflicts(node);
+            CheckForConflicts(node);
         }
 
     }
 
-    private static async Task CheckForConflicts(TreeNodeModel<T> node)
+    private void CheckForConflicts(RepositoryNodeModel node)
     {
         var minDistance = treeDistance + nodeSize;
         var shiftValue = 0D;
 
         var nodeContour = new Dictionary<double, double>();
-        await GetLeftContour(node, 0, nodeContour);
+        GetLeftContour(node, 0, nodeContour);
 
-        var sibling = await node.GetLeftMostSibling();
+        var sibling = node.GetLeftMostSibling();
         while (sibling != null && sibling != node)
         {
             var siblingContour = new Dictionary<double, double>();
-            await GetRightContour(sibling, 0, siblingContour);
+            GetRightContour(sibling, 0, siblingContour);
 
             for (double level = node.Y + depthDistance; level <= Math.Min(siblingContour.Keys.Max(), nodeContour.Keys.Max()); level += depthDistance)
             {
@@ -149,18 +156,18 @@ public static class TreeHelpers<T>
                 node.X += shiftValue;
                 node.Mod += shiftValue;
 
-                await CenterNodesBetween(node, sibling);
+                CenterNodesBetween(node, sibling);
 
                 shiftValue = 0;
             }
 
-            sibling = await sibling.GetNextSibling();
+            sibling = sibling.GetNextSibling();
         }
     }
 
-    private static async Task CenterNodesBetween(TreeNodeModel<T> leftNode, TreeNodeModel<T> rightNode)
+    private void CenterNodesBetween(RepositoryNodeModel leftNode, RepositoryNodeModel rightNode)
     {
-        var children = await leftNode.Parent.GetChildrenAsync();
+        var children = leftNode.Parent.Children;
 
         var leftIndex = children.IndexOf(rightNode);
         var rightIndex = children.IndexOf(leftNode);
@@ -184,14 +191,14 @@ public static class TreeHelpers<T>
                 count++;
             }
 
-            await CheckForConflicts(leftNode);
+            CheckForConflicts(leftNode);
         }
     }
 
-    private static async Task CheckAllChildrenOnScreen(TreeNodeModel<T> node)
+    private void CheckAllChildrenOnScreen(RepositoryNodeModel node)
     {
         var nodeContour = new Dictionary<double, double>();
-        await GetLeftContour(node, 0, nodeContour);
+        GetLeftContour(node, 0, nodeContour);
 
         double shiftAmount = 0;
         foreach (var y in nodeContour.Keys)
@@ -207,7 +214,7 @@ public static class TreeHelpers<T>
         }
     }
 
-    private static async Task GetLeftContour(TreeNodeModel<T> node, double modSum, Dictionary<double, double> values)
+    private void GetLeftContour(RepositoryNodeModel node, double modSum, Dictionary<double, double> values)
     {
         if (!values.ContainsKey(node.Y))
             values.Add(node.Y, node.X + modSum);
@@ -215,13 +222,13 @@ public static class TreeHelpers<T>
             values[node.Y] = Math.Min(values[node.Y], node.X + modSum);
 
         modSum += node.Mod;
-        foreach (var child in await node.GetChildrenAsync())
+        foreach (var child in node.Children)
         {
-            await GetLeftContour(child, modSum, values);
+            GetLeftContour(child, modSum, values);
         }
     }
 
-    private static async Task GetRightContour(TreeNodeModel<T> node, double modSum, Dictionary<double, double> values)
+    private void GetRightContour(RepositoryNodeModel node, double modSum, Dictionary<double, double> values)
     {
         if (!values.ContainsKey(node.Y))
             values.Add(node.Y, node.X + modSum);
@@ -229,9 +236,9 @@ public static class TreeHelpers<T>
             values[node.Y] = Math.Max(values[node.Y], node.X + modSum);
 
         modSum += node.Mod;
-        foreach (var child in (await node.GetChildrenAsync()))
+        foreach (var child in (node.Children))
         {
-            await GetRightContour(child, modSum, values);
+            GetRightContour(child, modSum, values);
         }
     }
 }

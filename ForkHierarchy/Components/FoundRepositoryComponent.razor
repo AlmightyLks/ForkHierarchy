@@ -1,0 +1,86 @@
+﻿@using ForkHierarchy.Core.Helpers;
+
+@code {
+#nullable disable
+}
+
+<MudDialog>
+    <DialogContent>
+        <MudCard>
+
+            <MudCardContent>
+                <MudText Typo="Typo.h5"><a href="@Node.Item.HtmlUrl" target="_blank">@Node.Item.Name</a></MudText>
+            </MudCardContent>
+
+            <MudCardMedia Image="@Node.Item.Owner.AvatarUrl" Height="100" />
+
+            <MudCardContent>
+                <MudText>Name</MudText>
+                <MudText Typo="Typo.body2"><a href="@Node.Item.HtmlUrl">@Node.Item.Name</a></MudText>
+            </MudCardContent>
+
+            <MudCardContent>
+                <MudText>Owner</MudText>
+                <MudText Typo="Typo.body2"><a href="@Node.Item.Owner.HtmlUrl">@Node.Item.Owner.Login</a></MudText>
+            </MudCardContent>
+
+            <MudCardContent>
+                <MudText>Forks</MudText>
+                <MudText Typo="Typo.body2">@Node.Item.ForksCount</MudText>
+            </MudCardContent>
+
+            <MudCardContent>
+                <MudText>Stars</MudText>
+                <MudText Typo="Typo.body2">@Node.Item.Stars</MudText>
+            </MudCardContent>
+
+            @if (RepoState == State.Known)
+            {
+                <MudCardContent>
+                    <MudText>Last Updated</MudText>
+                    <MudText Typo="Typo.body2"><ToLocal DateTime="DatabaseRepository.CreatedAt" Format="ddd mmm dd yyyy HH:MM:ss"></ToLocal></MudText>
+                </MudCardContent>
+            }
+            else if (RepoState == State.Queued)
+            {
+                <MudCardContent>
+                    <MudText>Queued</MudText>
+                    <MudText Typo="Typo.body2">
+                        <ToLocal DateTime="DatabaseQueue.AddedAt" Format="yyyy/dd/mm HH:MM:ss"></ToLocal>
+                    </MudText>
+                </MudCardContent>
+
+                <MudCardContent>
+                    <MudText>Available (ETA)</MudText>
+                    <MudText Typo="Typo.body2">
+                        <ToLocal DateTime="CalculateETA()" Format="yyyy/dd/mm HH:MM:ss"></ToLocal>
+                    </MudText>
+                </MudCardContent>
+            }
+        </MudCard>
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        @if (RepoState == State.Known)
+        {
+            <MudButton Color="Color.Primary" OnClick="Submit">Refresh</MudButton>
+            
+            //<MudButton Color="Color.Primary" OnClick="Submit" Disabled="@((DateTime.UtcNow - DatabaseRepository.CreatedAt) <= TimeSpan.FromHours(1))">Refresh</MudButton>
+        }
+        else if (RepoState == State.Unknown)
+        {
+            <MudButton Color="Color.Primary" OnClick="Submit">Submit</MudButton>
+        }
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    public MudDialogInstance MudDialog { get; set; } = null!;
+
+    void Submit()
+        => MudDialog.Close(DialogResult.Ok(true));
+    void Cancel()
+        => MudDialog.Cancel();
+}

@@ -1,13 +1,12 @@
 ﻿using Blazor.Diagrams.Core.Models;
-using Octokit;
 
-namespace ForkHierarchy.Models;
+namespace ForkHierarchy.Core.Models;
 
 public class NodePort : PortModel
 {
-    public TreeNodeModel<Repository> Node { get; set; }
+    public RepositoryNodeModel Node { get; set; }
 
-    public NodePort(TreeNodeModel<Repository> node, PortAlignment alignment = PortAlignment.Top)
+    public NodePort(RepositoryNodeModel node, PortAlignment alignment = PortAlignment.Top)
         : base(node, alignment, null, null)
     {
         Node = node;

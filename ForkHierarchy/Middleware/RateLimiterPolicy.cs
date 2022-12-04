@@ -1,4 +1,4 @@
-﻿using ForkHierarchy.Options;
+﻿using ForkHierarchy.Core.Options;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Options;
 using System.Threading.RateLimiting;

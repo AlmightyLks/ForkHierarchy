@@ -155,7 +155,8 @@
 * {
     overflow: hidden;
 }
-body{
+
+body {
     margin: 0;
 }
 
@@ -179,13 +180,4 @@ body{
     100% {
         transform: rotate(360deg)
     }
-}
-
-.unselectable {
-    -webkit-touch-callout: none;
-    -webkit-user-select: none;
-    -khtml-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
 }

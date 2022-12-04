@@ -1,7 +1,7 @@
 ﻿using Blazor.Diagrams.Core;
 using Blazor.Diagrams.Core.Models;
 
-namespace ForkHierarchy.Helpers;
+namespace ForkHierarchy.Core.Helpers;
 
 public static class DiagramHelper
 {
@@ -10,9 +10,9 @@ public static class DiagramHelper
         diagram.SelectModel(node, unselectOthers: true);
         diagram.ZoomToFit(margin);
 
-        var width = node.Size.Width * diagram.Zoom;
+        var width = node.Size!.Width * diagram.Zoom;
         var scaledMargin = margin * diagram.Zoom;
-        var deltaX = (diagram.Container.Width / 2) - (width / 2) - scaledMargin;
+        var deltaX = (diagram.Container!.Width / 2) - (width / 2) - scaledMargin;
         diagram.UpdatePan(deltaX, 0);
     }
 }

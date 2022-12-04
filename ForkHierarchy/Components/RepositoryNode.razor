@@ -1,8 +1,8 @@
 ﻿@using Blazor.Diagrams.Components.Renderers
 @using Blazor.Diagrams.Core.Models;
 
-<div style="opacity: @(Opacity.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture))">
-    <MudCard class="selectedGlow" style="width: 300px">
+<div style="opacity: @(Node.Opacity.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)); @Style">
+    <MudCard class="@Class" style="width: 300px">
         @{
             Console.WriteLine($"{DateTime.Now} {counter++} Lmaoooo");
         }
@@ -35,7 +35,7 @@
 
         <MudCardContent>
             <MudText>Stars</MudText>
-            <MudText Typo="Typo.body2">@Node.Item?.StargazersCount</MudText>
+            <MudText Typo="Typo.body2">@Node.Item?.Stars</MudText>
         </MudCardContent>
 
         @if (Node.GetPort(PortAlignment.Bottom) is { } botPort)
@@ -44,6 +44,6 @@
         }
     </MudCard>
 </div>
-@code{
+@code {
     static int counter = 1;
 }

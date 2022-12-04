@@ -1,4 +1,4 @@
-﻿namespace ForkHierarchy.Options;
+﻿namespace ForkHierarchy.Core.Options;
 
 public class RateLimitOptions
 {
