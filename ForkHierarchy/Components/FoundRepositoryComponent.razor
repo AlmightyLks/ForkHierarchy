@@ -37,8 +37,8 @@
             @if (RepoState == State.Known)
             {
                 <MudCardContent>
-                    <MudText>Last Updated</MudText>
-                    <MudText Typo="Typo.body2"><ToLocal DateTime="DatabaseRepository.CreatedAt" Format="ddd mmm dd yyyy HH:MM:ss"></ToLocal></MudText>
+                    <MudText>Submitted at</MudText>
+                    <MudText Typo="Typo.body2"><ToLocal DateTime="DatabaseRepository.CreatedAt" Format="yyyy-mm-dd HH:MM:ss"></ToLocal></MudText>
                 </MudCardContent>
             }
             else if (RepoState == State.Queued)
@@ -46,14 +46,14 @@
                 <MudCardContent>
                     <MudText>Queued</MudText>
                     <MudText Typo="Typo.body2">
-                        <ToLocal DateTime="DatabaseQueue.AddedAt" Format="yyyy/dd/mm HH:MM:ss"></ToLocal>
+                        <ToLocal DateTime="DatabaseQueue.AddedAt" Format="yyyy-mm-dd HH:MM:ss"></ToLocal>
                     </MudText>
                 </MudCardContent>
 
                 <MudCardContent>
                     <MudText>Available (ETA)</MudText>
                     <MudText Typo="Typo.body2">
-                        <ToLocal DateTime="CalculateETA()" Format="yyyy/dd/mm HH:MM:ss"></ToLocal>
+                        <ToLocal DateTime="CalculateETA()" Format="yyyy-mm-dd HH:MM:ss"></ToLocal>
                     </MudText>
                 </MudCardContent>
             }
@@ -61,12 +61,12 @@
     </DialogContent>
 
     <DialogActions>
-        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Error" OnClick="Cancel">Cancel</MudButton>
         @if (RepoState == State.Known)
         {
-            <MudButton Color="Color.Primary" OnClick="Submit">Refresh</MudButton>
-            
-            //<MudButton Color="Color.Primary" OnClick="Submit" Disabled="@((DateTime.UtcNow - DatabaseRepository.CreatedAt) <= TimeSpan.FromHours(1))">Refresh</MudButton>
+            //<MudButton Color="Color.Warning" OnClick="Submit">Refresh</MudButton>
+            <MudButton Color="Color.Warning" OnClick="Submit" Disabled="@((DateTime.UtcNow - DatabaseRepository.CreatedAt) <= TimeSpan.FromHours(1))">Refresh</MudButton>
+            <MudButton Color="Color.Primary" OnClick="ShowHierachy">Show</MudButton>
         }
         else if (RepoState == State.Unknown)
         {

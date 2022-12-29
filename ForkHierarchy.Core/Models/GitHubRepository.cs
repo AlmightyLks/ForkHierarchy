@@ -14,16 +14,17 @@ public class GitHubRepository
     public int Stars { get; set; }
     public bool IsFork { get; set; }
     public int ForksCount { get; set; }
+    public DateTime LastCommit { get; set; }
     public DateTime CreatedAt { get; set; }
 
     public GitHubUser Owner { get; set; } = null!;
-    public GitHubRepository? Parent { get; set; }
+    public int? ParentId { get; set; }
+    public int? SourceId { get; set; }
     public List<GitHubRepository> Children { get; set; } = null!;
 
     public GitHubRepository()
     {
         Children = new List<GitHubRepository>();
-        CreatedAt = DateTime.UtcNow;
     }
     public GitHubRepository(Repository repository)
     {
@@ -43,12 +44,13 @@ public class GitHubRepository
             AvatarUrl = repository.Owner.AvatarUrl,
             Email = repository.Owner.Email,
             Location = repository.Owner.Location,
-            GHId = repository.Owner.Id,
+            Id = repository.Owner.Id,
             Login = repository.Owner.Login,
             Name = repository.Owner.Login,
             Type = (ForkHierarchy.Core.Models.AccountType)(repository.Owner.Type ?? default)
         };
         Children = new List<GitHubRepository>();
+        LastCommit = repository.PushedAt?.UtcDateTime ?? default;
         CreatedAt = DateTime.UtcNow;
     }
 }

@@ -3,6 +3,7 @@ using System;
 using Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,12 +11,14 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Database.Migrations
 {
     [DbContext(typeof(ForkHierarchyContext))]
-    partial class ForkHierarchyContextModelSnapshot : ModelSnapshot
+    [Migration("20221225220248_Replaced_GitHubRepository_ParentSourceReferenceWithLooseIds")]
+    partial class ReplacedGitHubRepositoryParentSourceReferenceWithLooseIds
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "7.0.1");
+            modelBuilder.HasAnnotation("ProductVersion", "7.0.0");
 
             modelBuilder.Entity("Database.Models.GitHubRepository", b =>
                 {
@@ -40,15 +43,15 @@ namespace Database.Migrations
                     b.Property<long>("GHId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("GitHubRepositoryId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("HtmlUrl")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<bool>("IsFork")
                         .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("LastCommit")
-                        .HasColumnType("TEXT");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -67,6 +70,8 @@ namespace Database.Migrations
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("GitHubRepositoryId");
 
                     b.HasIndex("Id")
                         .IsUnique();
@@ -137,6 +142,10 @@ namespace Database.Migrations
 
             modelBuilder.Entity("Database.Models.GitHubRepository", b =>
                 {
+                    b.HasOne("Database.Models.GitHubRepository", null)
+                        .WithMany("Children")
+                        .HasForeignKey("GitHubRepositoryId");
+
                     b.HasOne("Database.Models.GitHubUser", "Owner")
                         .WithMany()
                         .HasForeignKey("OwnerId")
@@ -144,6 +153,11 @@ namespace Database.Migrations
                         .IsRequired();
 
                     b.Navigation("Owner");
+                });
+
+            modelBuilder.Entity("Database.Models.GitHubRepository", b =>
+                {
+                    b.Navigation("Children");
                 });
 #pragma warning restore 612, 618
         }

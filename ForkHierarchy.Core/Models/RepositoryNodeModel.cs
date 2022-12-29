@@ -3,6 +3,7 @@
 
 using Blazor.Diagrams.Core.Geometry;
 using Blazor.Diagrams.Core.Models;
+using System.Linq;
 
 namespace ForkHierarchy.Core.Models;
 
@@ -19,17 +20,39 @@ public class RepositoryNodeModel : NodeModel
     public double Y { get => Position.Y; set => Position = new Point(Position.X, value); }
     public double Mod { get; set; }
 
-    public RepositoryNodeModel(GitHubRepository item)
+    public RepositoryNodeModel(RepositoryNodeModel nodeModel)
+    {
+        Parent = nodeModel.Parent;
+        Item = nodeModel.Item;
+        Opacity = nodeModel.Opacity;
+        X = nodeModel.X;
+        Y = nodeModel.Y;
+        Mod = nodeModel.Mod;
+        Children = nodeModel.Children.Select(x => new RepositoryNodeModel(x)).ToList();
+        foreach (var port in nodeModel.Ports)
+            AddPort(port);
+        Size = nodeModel.Size;
+    }
+
+    public RepositoryNodeModel(GitHubRepository item, Size size)
     {
         this.Item = item;
         this.Parent = null;
         Children = new List<RepositoryNodeModel>();
+        AddPort(new NodePort(this, PortAlignment.Top));
+        AddPort(new NodePort(this, PortAlignment.Bottom));
+        Opacity = 1;
+        Size = size;
     }
-    public RepositoryNodeModel(GitHubRepository item, RepositoryNodeModel parent, List<RepositoryNodeModel> children)
+    public RepositoryNodeModel(GitHubRepository item, RepositoryNodeModel parent, List<RepositoryNodeModel> children, Size size)
     {
         this.Item = item;
         this.Parent = parent;
         Children = children;
+        AddPort(new NodePort(this, PortAlignment.Top));
+        AddPort(new NodePort(this, PortAlignment.Bottom));
+        Opacity = 1;
+        Size = size;
     }
 
     public bool IsLeaf()
@@ -45,12 +68,12 @@ public class RepositoryNodeModel : NodeModel
         return Parent.Children[0] == this;
     }
 
-    public bool IsRightMostAsync()
+    public bool IsRightMost()
     {
         if (this.Parent == null)
             return true;
 
-        return Children[^1] == this;
+        return Parent.Children[^1] == this;
     }
 
     public RepositoryNodeModel GetPreviousSibling()
@@ -65,7 +88,7 @@ public class RepositoryNodeModel : NodeModel
 
     public RepositoryNodeModel GetNextSibling()
     {
-        if (this.Parent == null || IsRightMostAsync())
+        if (this.Parent == null || IsRightMost())
             return null;
 
         var children = Parent.Children;

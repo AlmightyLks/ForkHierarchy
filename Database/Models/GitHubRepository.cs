@@ -17,17 +17,19 @@ public class GitHubRepository
     public int Stars { get; set; }
     public bool IsFork { get; set; }
     public int ForksCount { get; set; }
+    public DateTime LastCommit { get; set; }
     public DateTime CreatedAt { get; set; }
 
     public GitHubUser Owner { get; set; } = null!;
-    public GitHubRepository? Parent { get; set; }
-
+    public int? ParentId { get; set; }
     public int? SourceId { get; set; }
-    public GitHubRepository? Source { get; set; }
 
-    public ICollection<GitHubRepository> Children { get; set; } = new List<GitHubRepository>();
+    //public GitHubRepository? Parent { get; set; }
+    //public GitHubRepository? Source { get; set; }
+
+    //public ICollection<GitHubRepository> Children { get; set; } = new List<GitHubRepository>();
 }
-public class GitHubRepositoryEtityTypeConfiguration : IEntityTypeConfiguration<GitHubRepository>
+public class GitHubRepositoryEntityTypeConfiguration : IEntityTypeConfiguration<GitHubRepository>
 {
     public void Configure(EntityTypeBuilder<GitHubRepository> builder)
     {
@@ -36,18 +38,9 @@ public class GitHubRepositoryEtityTypeConfiguration : IEntityTypeConfiguration<G
             .IsUnique();
 
         builder
-            .HasMany(g => g.Children)
-            .WithOne(g => g.Parent);
-
-        builder
-            .HasOne(g => g.Parent)
-            .WithMany(g => g.Children);
-
-        builder
-            .HasOne(g => g.Source);
-
-        builder
-            .HasOne(g => g.Owner);
+            .HasOne(g => g.Owner)
+            .WithMany()
+            .OnDelete(DeleteBehavior.Cascade);
 
         builder
             .Property(g => g.GHId)

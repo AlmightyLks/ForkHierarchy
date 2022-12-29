@@ -74,7 +74,7 @@ namespace ForkHierarchy.Pages
 
                 var dbo = await DbContext.GitHubRepositories.Include(x => x.Owner).FirstOrDefaultAsync(x => x.FullName == SearchText);
                 var dto = dbo?.ToDto() ?? new GitHubRepository(repo);
-                _foundRepository = new RepositoryNodeModel(dto);
+                _foundRepository = new RepositoryNodeModel(dto, RepositoryNode.Size);
 
                 await OpenDialogAsync();
             }

@@ -17,6 +17,9 @@ public static class DatabaseMapper
             FullName = dto.FullName,
             HtmlUrl = dto.HtmlUrl,
             Owner = dto.Owner.ToDbo()!,
+            ParentId = dto.ParentId,
+            SourceId = dto.SourceId,
+            LastCommit = dto.LastCommit,
             CreatedAt = dto.CreatedAt
         };
     public static GitHubRepository? ToDto(this Database.Models.GitHubRepository dto)
@@ -32,6 +35,9 @@ public static class DatabaseMapper
             FullName = dto.FullName,
             HtmlUrl = dto.HtmlUrl,
             Owner = dto.Owner.ToDto()!,
+            ParentId = dto.ParentId,
+            SourceId = dto.SourceId,
+            LastCommit = dto.LastCommit,
             CreatedAt = dto.CreatedAt
         };
 
@@ -45,8 +51,7 @@ public static class DatabaseMapper
             AvatarUrl = dto.AvatarUrl,
             Email = dto.Email,
             Location = dto.Location,
-            Type = (Database.Models.AccountType)dto.Type,
-            GHId = dto.GHId
+            Type = (Database.Models.AccountType)dto.Type
         };
     public static GitHubUser? ToDto(this Database.Models.GitHubUser dto)
         => dto == null ? null : new GitHubUser()
@@ -58,7 +63,6 @@ public static class DatabaseMapper
             AvatarUrl = dto.AvatarUrl,
             Email = dto.Email,
             Location = dto.Location,
-            Type = (AccountType)dto.Type,
-            GHId = dto.GHId
+            Type = (AccountType)dto.Type
         };
 }

@@ -44,7 +44,14 @@ public class DiscordSink : ILogEventSink
                 .WithColor(Color.DarkRed)
                 .Build();
 
-            await client.SendMessageAsync(embeds: new[] { embed });
+            try
+            {
+                await client.SendMessageAsync(embeds: new[] { embed });
+            }
+            catch(TimeoutException)
+            {
+
+            }
         }
     }
 }

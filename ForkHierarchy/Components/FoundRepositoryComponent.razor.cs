@@ -9,6 +9,9 @@ namespace ForkHierarchy.Components;
 public partial class FoundRepositoryComponent
 {
     [Inject]
+    public NavigationManager NavigationManager { get; set; }
+
+    [Inject]
     public ForkHierarchyContext DbContext { get; set; }
 
     [Parameter]
@@ -35,6 +38,11 @@ public partial class FoundRepositoryComponent
 
         var result = DatabaseQueue.AddedAt.AddMinutes(normalizedQueueItems * 5);
         return result;
+    }
+
+    public void ShowHierachy()
+    {
+        NavigationManager.NavigateTo($"/Display/{DatabaseRepository.Id}");
     }
 }
 

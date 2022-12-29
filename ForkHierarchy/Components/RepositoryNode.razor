@@ -1,10 +1,16 @@
 ﻿@using Blazor.Diagrams.Components.Renderers
 @using Blazor.Diagrams.Core.Models;
 
+@code{
+    #nullable disable
+    static int counter = 1;
+}
+
+
 <div style="opacity: @(Node.Opacity.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture)); @Style">
     <MudCard class="@Class" style="width: 300px">
         @{
-            Console.WriteLine($"{DateTime.Now} {counter++} Lmaoooo");
+            //Console.WriteLine($"{DateTime.Now} {counter++} Lmaoooo");
         }
 
         @if (Node.GetPort(PortAlignment.Top) is { } topPort)
@@ -13,14 +19,14 @@
         }
 
         <MudCardContent>
-            <MudText Typo="Typo.h5"><a href="@Node.Item?.HtmlUrl" target="_blank">@Node.Item?.Name</a></MudText>
+            <MudText Typo="Typo.h5"><a href="@Node.Item.HtmlUrl" target="_blank">@Node.Item.Name</a></MudText>
         </MudCardContent>
 
-        <MudCardMedia Image="@Node.Item?.Owner.AvatarUrl" Height="100" />
+        <MudCardMedia Image="@Node.Item.Owner.AvatarUrl" Height="100" />
 
         <MudCardContent>
             <MudText>Name</MudText>
-            <MudText Typo="Typo.body2">@Node.Item?.Name</MudText>
+            <MudText Typo="Typo.body2">@Node.Item.Name</MudText>
         </MudCardContent>
 
         <MudCardContent>
@@ -30,12 +36,19 @@
 
         <MudCardContent>
             <MudText>Forks</MudText>
-            <MudText Typo="Typo.body2">@Node.Item?.ForksCount</MudText>
+            <MudText Typo="Typo.body2">@Node.Item.ForksCount</MudText>
         </MudCardContent>
 
         <MudCardContent>
             <MudText>Stars</MudText>
-            <MudText Typo="Typo.body2">@Node.Item?.Stars</MudText>
+            <MudText Typo="Typo.body2">@Node.Item.Stars</MudText>
+        </MudCardContent>
+
+        <MudCardContent>
+            <MudText>Last Commit</MudText>
+            <MudText Typo="Typo.body2">
+                <ToLocal DateTime="Node.Item.LastCommit" Format="yyyy-mm-dd HH:MM:ss"></ToLocal>
+            </MudText>
         </MudCardContent>
 
         @if (Node.GetPort(PortAlignment.Bottom) is { } botPort)
@@ -44,6 +57,3 @@
         }
     </MudCard>
 </div>
-@code {
-    static int counter = 1;
-}

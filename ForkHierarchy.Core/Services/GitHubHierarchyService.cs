@@ -47,7 +47,9 @@ public class GitHubHierarchyService
             }
             catch (NotFoundException)
             {
-
+                // If not found, ignore.
+                // For whatever reason, GitHub stores and provides
+                // Repositories that no longer exist.
             }
         });
 

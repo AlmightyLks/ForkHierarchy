@@ -3,6 +3,7 @@ using System;
 using Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,12 +11,14 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Database.Migrations
 {
     [DbContext(typeof(ForkHierarchyContext))]
-    partial class ForkHierarchyContextModelSnapshot : ModelSnapshot
+    [Migration("20221210190655_GitHubUser_Index_UniqueRemoved")]
+    partial class GitHubUserIndexUniqueRemoved
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "7.0.1");
+            modelBuilder.HasAnnotation("ProductVersion", "7.0.0");
 
             modelBuilder.Entity("Database.Models.GitHubRepository", b =>
                 {
@@ -47,9 +50,6 @@ namespace Database.Migrations
                     b.Property<bool>("IsFork")
                         .HasColumnType("INTEGER");
 
-                    b.Property<DateTime>("LastCommit")
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -72,6 +72,10 @@ namespace Database.Migrations
                         .IsUnique();
 
                     b.HasIndex("OwnerId");
+
+                    b.HasIndex("ParentId");
+
+                    b.HasIndex("SourceId");
 
                     b.ToTable("GitHubRepositories");
                 });
@@ -143,7 +147,26 @@ namespace Database.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Database.Models.GitHubRepository", "Parent")
+                        .WithMany("Children")
+                        .HasForeignKey("ParentId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("Database.Models.GitHubRepository", "Source")
+                        .WithMany()
+                        .HasForeignKey("SourceId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
                     b.Navigation("Owner");
+
+                    b.Navigation("Parent");
+
+                    b.Navigation("Source");
+                });
+
+            modelBuilder.Entity("Database.Models.GitHubRepository", b =>
+                {
+                    b.Navigation("Children");
                 });
 #pragma warning restore 612, 618
         }

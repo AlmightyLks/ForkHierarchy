@@ -1,31 +1,46 @@
-﻿using Blazor.Diagrams.Core;
+﻿using Blazor.Diagrams.Components;
+using Blazor.Diagrams.Core;
 using Blazor.Diagrams.Core.Models;
 using Blazor.Diagrams.Core.Models.Base;
+using Database;
+using Database.Models;
 using ForkHierarchy.Components;
+using ForkHierarchy.Core.Helpers;
+using ForkHierarchy.Core.Mapping;
 using ForkHierarchy.Core.Models;
 using ForkHierarchy.Core.Services;
+using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
+using Microsoft.EntityFrameworkCore;
+using Octokit;
+using System;
 
 public class HierarchyViewModel
 {
     public GitHubHierarchyService HierarchyBuilder { get; set; } = null!;
-
+    public bool ResetPosition { get; set; } = true;
     public Diagram Diagram { get; set; } = null!;
     public bool Rendering { get; set; }
-    public bool FromSource { get; set; } = true;
 
-    //public string RepositoryUrl { get; set; } = "https://github.com/jaywalnut310/vits/";
-    public string RepositoryUrl { get; set; } = "https://github.com/SynapseSL/Synapse/";
+    public Filter Filter { get; } = new Filter();
 
-    private RepositoryNodeModel? _rootNode;
+    public Action? StateHasChanged { get; set; }
 
-    private string? _lastRepository;
+    private RepositoryNodeModel? _originalRootNode;
+    private List<int> _whitelistedNodeIds;
 
-    public HierarchyViewModel(GitHubHierarchyService gitHubHierarchyService)
+    private ForkHierarchyContext _dbContext;
+    private TreeBuilder<RepositoryNodeModel> _treeBuilder;
+
+    public HierarchyViewModel(GitHubHierarchyService gitHubHierarchyService, ForkHierarchyContext dbContext)
     {
         HierarchyBuilder = gitHubHierarchyService;
+        _dbContext = dbContext;
+        _treeBuilder = new TreeBuilder<RepositoryNodeModel>(RenderNode);
+        _whitelistedNodeIds = new List<int>();
     }
 
-    public void Initialize()
+    public async Task<bool> InitializeAsync(int id)
     {
         var options = new DiagramOptions
         {
@@ -42,120 +57,59 @@ public class HierarchyViewModel
         };
         Diagram = new Diagram(options);
         Diagram.RegisterModelComponent<RepositoryNodeModel, RepositoryNode>();
-        Diagram.SelectionChanged += Diagram_SelectionChanged;
-        //Diagram.MouseClick += Diagram_MouseClick;
+        Diagram.MouseClick += Diagram_MouseClick;
+
+        return await PrepareData(id);
     }
 
-    private void Diagram_MouseClick(Model model, Microsoft.AspNetCore.Components.Web.MouseEventArgs arg2)
+    public void Render()
     {
-        if (model is null)
-        {
-            foreach (var dNode in Diagram.Nodes)
-            {
-                if (dNode is RepositoryNodeModel dNodeModel)
-                {
-                    dNodeModel.Opacity = 1f;
-                }
-            }
-        }
-        else
-        {
-            var nodeModel = model as RepositoryNodeModel;
-
-            foreach (var dNode in Diagram.Nodes)
-            {
-                if (dNode is RepositoryNodeModel dNodeModel)
-                {
-                    dNodeModel.Opacity = 0.25f;
-                }
-            }
-
-            while (nodeModel is not null)
-            {
-                nodeModel.Opacity = 1f;
-                nodeModel = nodeModel.Parent;
-            }
-        }
-    }
-
-    private void Diagram_SelectionChanged(SelectableModel obj)
-    {
-        /*
-        if (obj.Selected)
-        {
-            foreach (var dNode in Diagram.Nodes)
-            {
-                if (dNode is RepositoryNodeModel nodeModel)
-                {
-                    nodeModel.RepositoryNode.Opacity = 0.25f;
-                }
-            }
-
-            if (obj.Selected && obj is RepositoryNodeModel node)
-            {
-                while (node is not null)
-                {
-                    node.RepositoryNode.Opacity = 1f;
-                    node = node.Parent;
-                }
-            }
-        }
-        else
-        {
-            foreach (var dNode in Diagram.Nodes)
-            {
-                if (dNode is RepositoryNodeModel nodeModel)
-                {
-                    nodeModel.RepositoryNode.Opacity = 1f;
-                }
-            }
-        }
-        */
-    }
-
-    public async Task UserRender()
-    {
-        if (String.IsNullOrWhiteSpace(RepositoryUrl))
+        if (_originalRootNode is null)
             return;
-        RepositoryUrl = RepositoryUrl.Replace(".git", "").Trim('/');
-        var vals = RepositoryUrl!.Split('/').TakeLast(2).ToArray();
-        var foo = await HierarchyBuilder.GetRepositoryAsync(vals[0], vals[1], FromSource);
-
-        Console.WriteLine();
-
-        /*
-        Diagram.SuspendRefresh = true;
-        Rendering = true;
-        RepositoryNode.SupressRender = true;
-        if (!String.IsNullOrWhiteSpace(RepositoryUrl) && RepositoryUrl != _lastRepository)
-        {
-            var vals = RepositoryUrl!.Split('/').TakeLast(2).ToArray();
-
-            _rootNode = await HierarchyBuilder.GetRepositoryAsync(vals[0], vals[1], FromSource);
-            //_rootNode.Position = new Point(Diagram.Pan.X, Diagram.Pan.Y);
-            _rootNode.Size = RepositoryNode.Size;
-            _lastRepository = RepositoryUrl;
-        }
 
         Diagram.Links.Clear();
         Diagram.Nodes.Clear();
 
-        await TreeHelpers<Repository>.CalculateNodePositions(_rootNode, RenderNodeAsync);
+        _whitelistedNodeIds.Clear();
+        WhitelistFilteredNodes(_originalRootNode);
 
-        //await RenderNodeAsync(_rootNode, null);
+        _treeBuilder.CalculateNodePositions(_originalRootNode);
 
-        Diagram.CenterOnNode(_rootNode!, 1_500);
+        if (ResetPosition)
+            Diagram.CenterOnNode(_originalRootNode, 1_500);
 
-        //Diagram.SetZoom(1);
-
-        Rendering = false;
-        RepositoryNode.SupressRender = true;
-        Diagram.SuspendRefresh = false;
-        */
+        Console.WriteLine(_originalRootNode.Id);
+        
+        StateHasChanged?.Invoke();
     }
 
-    public void RenderNodeAsync(RepositoryNodeModel current)
+    private bool WhitelistFilteredNodes(RepositoryNodeModel node)
     {
+        bool hasWhitelistedChild = false;
+        foreach (var child in node.Children)
+        {
+            if (WhitelistFilteredNodes(child))
+            {
+                hasWhitelistedChild = true;
+            }
+        }
+
+        if (Filter.Applies(node) || hasWhitelistedChild)
+        {
+            _whitelistedNodeIds.Add(node.Item.Id);
+            return true;
+        }
+        return false;
+    }
+
+    private void RenderNode(RepositoryNodeModel current)
+    {
+        if (!_whitelistedNodeIds.Contains(current.Item.Id))
+            return;
+
+        if (Diagram.Nodes.Contains(current))
+            return;
+
         Diagram.Nodes.Add(current);
 
         if (current.Parent is not null)
@@ -168,13 +122,95 @@ public class HierarchyViewModel
             link.SetTargetPort(current.GetPort(PortAlignment.Top));
             Diagram.Links.Add(link);
         }
+    }
 
-        /*
-        foreach (var child in await current.GetChildrenAsync())
+    private async Task<bool> PrepareData(int id)
+    {
+        var rootRepo = await _dbContext.GitHubRepositories.Include(x => x.Owner).FirstOrDefaultAsync(x => x.Id == id);
+        if (rootRepo is null)
+            return false;
+
+        // Child Nodes
+        var allNodes = (await _dbContext.GitHubRepositories.Include(x => x.Owner).Where(x => x.SourceId == id).ToListAsync())
+            .Select(x => new RepositoryNodeModel(x.ToDto()!, RepositoryNode.Size))
+            .ToList();
+        // Root Node
+        _originalRootNode = new RepositoryNodeModel(rootRepo.ToDto()!, RepositoryNode.Size);
+        allNodes.Add(_originalRootNode);
+
+        return ConnectNodes(allNodes);
+    }
+
+    private bool ConnectNodes(List<RepositoryNodeModel> nodes)
+    {
+        var parentChildNodes = nodes.GroupBy(x => x.Item.ParentId);
+        foreach (var parentChildNode in parentChildNodes)
         {
-            child.Size = RepositoryNode.Size;
-            await RenderNodeAsync(child, current);
+            if (parentChildNode.Key is null)
+                continue;
+
+            var parent = nodes.FirstOrDefault(x => x.Item.Id == parentChildNode.Key || (parentChildNode.Key is null && x.Item.ParentId is null));
+            // Found Children without parent...
+            if (parent is null)
+            {
+                // I guess we fail?
+                return false;
+            }
+            foreach (var child in parentChildNode)
+            {
+                child.Parent = parent;
+                parent.Children.Add(child);
+            }
         }
-        */
+        return true;
+    }
+
+    private void Diagram_MouseClick(Model model, MouseEventArgs arg2)
+    {
+        if (arg2.Button == 0 && model is NodeModel nodeModel)
+        {
+            Diagram.CenterOnNode(nodeModel, 1000);
+        }
+    }
+}
+
+public class Filter
+{
+    public string? OwnerName { get; set; }
+    public string? TextSearch { get; set; }
+    public int? MinStars { get; set; }
+    public DateTime? LastCommitAfter { get; set; }
+
+    public bool Applies(RepositoryNodeModel node)
+    {
+        return HasNoFilter()
+            || TextSearchApplies()
+            || OwnerNameApplies()
+            || MinStarsApplies()
+            || LastCommitAfterApplies();
+
+        bool LastCommitAfterApplies()
+            => LastCommitAfter is not null
+            && (node.Item.LastCommit >= LastCommitAfter);
+
+        bool MinStarsApplies()
+            => MinStars is not null
+            && (node.Item.Stars >= MinStars);
+
+        bool OwnerNameApplies()
+            => !String.IsNullOrWhiteSpace(OwnerName)
+            && (node.Item.Owner.Login.Contains(OwnerName, StringComparison.OrdinalIgnoreCase));
+
+        bool TextSearchApplies()
+            => !String.IsNullOrWhiteSpace(TextSearch)
+            && (node.Item.FullName.Contains(TextSearch, StringComparison.OrdinalIgnoreCase)
+            || node.Item.Description.Contains(TextSearch, StringComparison.OrdinalIgnoreCase));
+
+        // If no filter is mentioned, give it a free-pass
+        bool HasNoFilter()
+            => LastCommitAfter is null
+            && MinStars is null
+            && String.IsNullOrWhiteSpace(OwnerName)
+            && String.IsNullOrWhiteSpace(TextSearch);
     }
 }

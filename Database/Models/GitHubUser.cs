@@ -7,8 +7,6 @@ namespace Database.Models;
 public class GitHubUser
 {
     public int Id { get; set; }
-
-    public int GHId { get; set; }
     public string? Name { get; set; }
     public string Login { get; set; } = null!;
     public string? Email { get; set; }
@@ -18,13 +16,12 @@ public class GitHubUser
     public string AvatarUrl { get; set; } = null!;
 }
 
-public class GitHubUserEtityTypeConfiguration : IEntityTypeConfiguration<GitHubUser>
+public class GitHubUserEntityTypeConfiguration : IEntityTypeConfiguration<GitHubUser>
 {
     public void Configure(EntityTypeBuilder<GitHubUser> builder)
     {
         builder
-            .HasIndex(g => g.Id)
-            .IsUnique();
+            .HasIndex(g => g.Id);
 
         builder
             .Property(g => g.Login)

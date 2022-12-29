@@ -54,17 +54,21 @@ public class ProcessQueuedRepositoriesJob : IJob
                 }
 
                 var dbRepo = await _dbContext.GitHubRepositories
+                    .Include(x => x.Owner)
                     .FirstOrDefaultAsync(x => x.GHId == curRepo.GHId);
+
                 if (dbRepo is not null)
                 {
                     var children = await _dbContext.GitHubRepositories
-                        .Include(x => x.Owner)
-                        .Where(x => x.Source == dbRepo)
+                        .Where(x => x.SourceId == dbRepo.Id)
                         .ToListAsync();
+
                     foreach (var child in children)
                     {
                         _dbContext.GitHubRepositories.Remove(child);
                     }
+
+                    _dbContext.GitHubRepositories.Remove(dbRepo);
 
                     await _dbContext.SaveChangesAsync();
                 }
@@ -94,17 +98,34 @@ public class ProcessQueuedRepositoriesJob : IJob
     private async Task<Database.Models.GitHubRepository> AddRepoAndChildrenAsync(GitHubRepository repository, Database.Models.GitHubRepository? source = null)
     {
         var dbRepo = repository.ToDbo()!;
-        dbRepo.Source = source;
+        dbRepo.SourceId = source?.Id;
         dbRepo.Owner = repository.Owner.ToDbo()!;
 
-        _dbContext.GitHubUsers.Add(dbRepo.Owner);
+        if (source is null)
+            source = dbRepo;
+
+        var dboOwner = await _dbContext.GitHubUsers.FirstOrDefaultAsync(x => x.Id == dbRepo.Owner.Id);
+
+        if (dboOwner is null)
+        {
+            _dbContext.GitHubUsers.Add(dbRepo.Owner);
+            //await _dbContext.SaveChangesAsync();
+        }
+        else
+        {
+            dbRepo.Owner = dboOwner;
+        }
+
         _dbContext.GitHubRepositories.Add(dbRepo);
+
+        // Save source repo to db, to give it an id
+        // So that we can give the children our source and parent repo id
+        await _dbContext.SaveChangesAsync();
 
         foreach (var child in repository.Children)
         {
-            var childDbRepo = await AddRepoAndChildrenAsync(child, dbRepo);
-            childDbRepo.Parent = dbRepo;
-            dbRepo.Children.Add(childDbRepo);
+            var childDbRepo = await AddRepoAndChildrenAsync(child, source);
+            childDbRepo.ParentId = dbRepo.Id;
         }
 
         return dbRepo;

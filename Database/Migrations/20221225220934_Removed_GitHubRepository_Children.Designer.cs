@@ -3,6 +3,7 @@ using System;
 using Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,12 +11,14 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Database.Migrations
 {
     [DbContext(typeof(ForkHierarchyContext))]
-    partial class ForkHierarchyContextModelSnapshot : ModelSnapshot
+    [Migration("20221225220934_Removed_GitHubRepository_Children")]
+    partial class RemovedGitHubRepositoryChildren
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "7.0.1");
+            modelBuilder.HasAnnotation("ProductVersion", "7.0.0");
 
             modelBuilder.Entity("Database.Models.GitHubRepository", b =>
                 {
@@ -46,9 +49,6 @@ namespace Database.Migrations
 
                     b.Property<bool>("IsFork")
                         .HasColumnType("INTEGER");
-
-                    b.Property<DateTime>("LastCommit")
-                        .HasColumnType("TEXT");
 
                     b.Property<string>("Name")
                         .IsRequired()

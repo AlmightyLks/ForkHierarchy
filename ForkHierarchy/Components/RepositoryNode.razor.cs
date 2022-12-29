@@ -6,7 +6,7 @@ namespace ForkHierarchy.Components;
 
 public partial class RepositoryNode
 {
-    public static readonly Size Size = new Size(300, 500);
+    public static readonly Size Size = new Size(300, 550);
 
     public static bool SupressRender { get; set; }
 

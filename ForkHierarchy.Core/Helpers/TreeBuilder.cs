@@ -1,5 +1,6 @@
 ﻿#nullable disable
 
+using System;
 using ForkHierarchy.Core.Models;
 
 namespace ForkHierarchy.Core.Helpers;
@@ -57,19 +58,6 @@ public class TreeBuilder<T>
             CalculateFinalPositions(child, modSum);
 
         _positionSet(node);
-
-        /*
-        if (children.Count == 0)
-        {
-            node.Size.Width = node.X;
-            node.Size.Height = node.Y;
-        }
-        else
-        {
-            node.Size.Width = children.Max(p => p.Size.Width);
-            node.Size.Height = children.Max(p => p.Size.Height);
-        }
-        */
     }
 
     private void CalculateInitialX(RepositoryNodeModel node)
