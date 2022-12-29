@@ -46,8 +46,8 @@ builder.Services.AddScoped<GitHubClient>(x =>
     string? pat = builder.Configuration?.GetValue<string>("Secrets:GitHubPAT");
 
     var client = new GitHubClient(new ProductHeaderValue("AlmightyLks"));
-    //if (!String.IsNullOrWhiteSpace(pat))
-    //    client.Credentials = new Credentials(pat);
+    if (!String.IsNullOrWhiteSpace(pat))
+        client.Credentials = new Credentials(pat);
     return client;
 });
 
@@ -142,34 +142,6 @@ using (var scope = app.Services.CreateScope())
 {
     using var db = scope.ServiceProvider.GetRequiredService<ForkHierarchyContext>();
     db.Database.Migrate();
-    /*
-    db.Database.ExecuteSqlRaw("DELETE FROM GitHubUsers");
-
-    var obj1 = new Database.Models.GitHubUser()
-    {
-        Id = 1,
-        AvatarUrl = "",
-        HtmlUrl = "",
-        Login = ""
-    };
-    var obj2 = new Database.Models.GitHubUser()
-    {
-        Id = 2,
-        AvatarUrl = "",
-        HtmlUrl = "",
-        Login = ""
-    };
-
-    db.GitHubUsers.Add(obj1);
-    db.GitHubUsers.Add(obj2);
-    db.SaveChanges();
-
-    db.GitHubUsers.Remove(obj1);
-    db.SaveChanges();
-
-    db.GitHubUsers.Add(obj1);
-    db.SaveChanges();
-    */
 }
 
 //using var scope = app.Services.CreateScope();

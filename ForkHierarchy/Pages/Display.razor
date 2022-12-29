@@ -10,7 +10,7 @@
         <MudText Typo="Typo.h6">Filter</MudText>
         <MudTextField Label="Owner" class="align-center" Style="min-width: 300px; width:10vw" @bind-Value="ViewModel.Filter.OwnerName" />
         <MudTextField Label="Text Search" class="align-center" Style="min-width: 300px; width:10vw" @bind-Value="ViewModel.Filter.TextSearch" />
-        <MudNumericField Label="Stars" HideSpinButtons="true" @bind-Value="ViewModel.Filter.MinStars" Variant="Variant.Text" />
+        <MudNumericField Label="Min Stars" HideSpinButtons="true" @bind-Value="ViewModel.Filter.MinStars" Variant="Variant.Text" />
         <MudDatePicker Label="Last Commit After" Editable="true" @bind-Date="ViewModel.Filter.LastCommitAfter" DateFormat="yyyy-MM-dd" />
     </MudCardContent>
 
