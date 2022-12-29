@@ -16,8 +16,8 @@ public class RepositoryNodeModel : NodeModel
 
     public List<RepositoryNodeModel> Children { get; }
 
-    public double X { get => Position.X; set => Position = new Point(value, Position.Y); }
-    public double Y { get => Position.Y; set => Position = new Point(Position.X, value); }
+    public double X { get => Position.X; set => SetPosition(value, Position.Y); }
+    public double Y { get => Position.Y; set => SetPosition(Position.X, value); }
     public double Mod { get; set; }
 
     public RepositoryNodeModel(RepositoryNodeModel nodeModel)
