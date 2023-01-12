@@ -23,9 +23,6 @@ public class GitHubHierarchyService
 
         var dto = new GitHubRepository(repository);
         dto.Children = await GetChildrenAsync(repository.Owner.Login, repository.Name);
-        //var rootRepo = new RepositoryNodeModel(dto, null, children);
-        //rootRepo.AddPort(new NodePort(rootRepo, PortAlignment.Top));
-        //rootRepo.AddPort(new NodePort(rootRepo, PortAlignment.Bottom));
         return dto;
     }
 
@@ -40,9 +37,6 @@ public class GitHubHierarchyService
                 var dto = new GitHubRepository(repository);
 
                 dto.Children = await GetChildrenAsync(repository.Owner.Login, repository.Name);
-                //var node = new RepositoryNodeModel(dto, null, children);
-                //node.AddPort(new NodePort(node, PortAlignment.Top));
-                //node.AddPort(new NodePort(node, PortAlignment.Bottom));
                 result.Add(dto);
             }
             catch (NotFoundException)
