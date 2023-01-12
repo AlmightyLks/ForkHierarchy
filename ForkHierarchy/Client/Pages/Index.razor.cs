@@ -1,10 +1,10 @@
 #nullable disable
 
+using ForkHierarchy.Client.Api;
 using ForkHierarchy.Client.Components;
 using ForkHierarchy.Core.Models;
 using ForkHierarchy.Core.Options;
 using Microsoft.AspNetCore.Components;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using MudBlazor;
 using Octokit;
@@ -28,13 +28,13 @@ namespace ForkHierarchy.Client.Pages
         public Regex RepoFullNameRegEx { get; } = new Regex("^\\w+\\/\\w+$");
 
         [Inject]
+        public NavigationManager NavigationManager { get; set; }
+
+        [Inject]
         public GitHubClient GitHubClient { get; set; }
 
         [Inject]
         public IOptions<GitHubOptions> GitHubOptions { get; set; }
-
-        [Inject]
-        public ForkHierarchyContext DbContext { get; set; }
 
         [Inject]
         public ISnackbar Snackbar { get; set; }
@@ -48,7 +48,7 @@ namespace ForkHierarchy.Client.Pages
         {
             if (String.IsNullOrWhiteSpace(SearchText))
                 return;
-
+            
             if (!RepoFullNameRegEx.IsMatch(SearchText))
             {
                 Snackbar.Add("Invalid Input", Severity.Error);
@@ -69,11 +69,14 @@ namespace ForkHierarchy.Client.Pages
                     Snackbar.Add($"Target Repository Exceeds max allowed Forks of {GitHubOptions.Value.MaxForks}", Severity.Error);
                     return;
                 }
-
+                var client = new ForkHierarchyApiClient(NavigationManager.BaseUri, null);
+                client.Git
+                
+                /*
                 var dbo = await DbContext.GitHubRepositories.Include(x => x.Owner).FirstOrDefaultAsync(x => x.FullName == SearchText);
                 var dto = dbo?.ToDto() ?? new GitHubRepository(repo);
                 _foundRepository = new RepositoryNodeModel(dto, RepositoryNode.Size);
-
+                */
                 await OpenDialogAsync();
             }
             catch (NotFoundException)
@@ -84,6 +87,7 @@ namespace ForkHierarchy.Client.Pages
 
         private async Task OpenDialogAsync()
         {
+            /*
             var databaseRepository = await DbContext.GitHubRepositories.Include(x => x.Owner).FirstOrDefaultAsync(x => x.FullName == _foundRepository.Item.FullName);
             var databaseQueue = await DbContext.QueuedRepositories.FirstOrDefaultAsync(x => x.Owner == _foundRepository.Item.Owner.Login && x.Name == _foundRepository.Item.Name);
             var repoState = State.Unknown;
@@ -115,11 +119,12 @@ namespace ForkHierarchy.Client.Pages
                 DbContext.QueuedRepositories.Add(queueItem);
                 DbContext.SaveChanges();
             }
+            */
         }
 
         public void Dispose()
         {
-            DbContext?.Dispose();
+            //DbContext?.Dispose();
         }
     }
 }

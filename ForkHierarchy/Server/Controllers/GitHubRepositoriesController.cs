@@ -1,7 +1,10 @@
-﻿using ForkHierarchy.Core.Models;
+﻿using Database;
+using ForkHierarchy.Core.Models;
+using ForkHierarchy.Server.Mapping;
 using Microsoft.AspNetCore.Mvc;
-
-// For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
+using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
+using System.Net;
 
 namespace ForkHierarchy.Server.Controllers;
 
@@ -9,29 +12,56 @@ namespace ForkHierarchy.Server.Controllers;
 [ApiController]
 public class GitHubRepositoriesController : ControllerBase
 {
+    private readonly ForkHierarchyContext _dbContext;
 
-    // GET api/<GitHubRepositoriesController>/5
+    public GitHubRepositoriesController(ForkHierarchyContext dbContext)
+    {
+        _dbContext = dbContext;
+    }
+
     [HttpGet("{id}")]
-    public GitHubRepository Get(int id)
+    [ProducesResponseType(typeof(GitHubRepository), (int)HttpStatusCode.OK)]
+    public async Task<IActionResult> GetGitHubRepositoryByIdAsync(int id)
     {
-        return null!;
+        var dto = await GetAsync(x => x.Id == id);
+        if (dto is null)
+            return NotFound();
+
+        return Ok(dto);
     }
 
-    // POST api/<GitHubRepositoriesController>
-    [HttpPost]
-    public void Post([FromBody] string value)
+    [HttpGet]
+    [ProducesResponseType(typeof(GitHubRepository), (int)HttpStatusCode.OK)]
+    public async Task<IActionResult> GetGitHubRepositoryByFullNameAsync(string fullName)
     {
+        var dto = await GetAsync(x => x.FullName == fullName);
+        if (dto is null)
+            return NotFound();
+
+        return Ok(dto);
     }
 
-    // PUT api/<GitHubRepositoriesController>/5
-    [HttpPut("{id}")]
-    public void Put(int id, [FromBody] string value)
+    private async Task<GitHubRepository?> GetAsync(Expression<Func<Database.Models.GitHubRepository, bool>> predicate)
     {
+        var dbo = await _dbContext.GitHubRepositories
+            .Include(x => x.Owner)
+            .FirstOrDefaultAsync(predicate);
+
+        if (dbo.ToDto() is not { } dto)
+            return null;
+
+        AddChildrenFor(dto);
+
+        return dto;
     }
 
-    // DELETE api/<GitHubRepositoriesController>/5
-    [HttpDelete("{id}")]
-    public void Delete(int id)
+    private void AddChildrenFor(GitHubRepository dto)
     {
+        foreach (var child in _dbContext.GitHubRepositories.Where(x => x.ParentId == dto.Id))
+        {
+            var childDto = child.ToDto()!;
+            AddChildrenFor(childDto);
+            dto.Children.Add(childDto);
+        }
     }
 }

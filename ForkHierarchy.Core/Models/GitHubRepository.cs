@@ -20,7 +20,7 @@ public class GitHubRepository
     public GitHubUser Owner { get; set; } = null!;
     public int? ParentId { get; set; }
     public int? SourceId { get; set; }
-    public List<GitHubRepository> Children { get; set; } = null!;
+    public List<GitHubRepository> Children { get; set; }
 
     public GitHubRepository()
     {

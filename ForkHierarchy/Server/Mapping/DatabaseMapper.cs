@@ -4,7 +4,7 @@ namespace ForkHierarchy.Server.Mapping;
 
 public static class DatabaseMapper
 {
-    public static Database.Models.GitHubRepository? ToDbo(this GitHubRepository dto)
+    public static Database.Models.GitHubRepository? ToDbo(this GitHubRepository? dto)
         => dto == null ? null : new Database.Models.GitHubRepository()
         {
             Id = dto.Id,
@@ -22,7 +22,7 @@ public static class DatabaseMapper
             LastCommit = dto.LastCommit,
             CreatedAt = dto.CreatedAt
         };
-    public static GitHubRepository? ToDto(this Database.Models.GitHubRepository dto)
+    public static GitHubRepository? ToDto(this Database.Models.GitHubRepository? dto)
         => dto == null ? null : new GitHubRepository()
         {
             Id = dto.Id,
@@ -41,7 +41,7 @@ public static class DatabaseMapper
             CreatedAt = dto.CreatedAt
         };
 
-    public static Database.Models.GitHubUser? ToDbo(this GitHubUser dto)
+    public static Database.Models.GitHubUser? ToDbo(this GitHubUser? dto)
         => dto == null ? null : new Database.Models.GitHubUser()
         {
             Id = dto.Id,
@@ -53,7 +53,7 @@ public static class DatabaseMapper
             Location = dto.Location,
             Type = (Database.Models.AccountType)dto.Type
         };
-    public static GitHubUser? ToDto(this Database.Models.GitHubUser dto)
+    public static GitHubUser? ToDto(this Database.Models.GitHubUser? dto)
         => dto == null ? null : new GitHubUser()
         {
             Id = dto.Id,
@@ -66,7 +66,7 @@ public static class DatabaseMapper
             Type = (AccountType)dto.Type
         };
 
-    public static Database.Models.QueuedRepository? ToDbo(this QueuedRepository dto)
+    public static Database.Models.QueuedRepository? ToDbo(this QueuedRepository? dto)
         => dto == null ? null : new Database.Models.QueuedRepository()
         {
             Id = dto.Id,
@@ -74,7 +74,7 @@ public static class DatabaseMapper
             Owner = dto.Owner,
             AddedAt = dto.AddedAt
         };
-    public static QueuedRepository? ToDto(this Database.Models.QueuedRepository dto)
+    public static QueuedRepository? ToDto(this Database.Models.QueuedRepository? dto)
         => dto == null ? null : new QueuedRepository()
         {
             Id = dto.Id,

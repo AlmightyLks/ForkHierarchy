@@ -24,6 +24,7 @@ public partial class FoundRepositoryComponent
 
     public DateTime CalculateETA()
     {
+        /*
         if (DatabaseQueue is null)
             return default;
 
@@ -34,6 +35,8 @@ public partial class FoundRepositoryComponent
 
         var result = DatabaseQueue.AddedAt.AddMinutes(normalizedQueueItems * 5);
         return result;
+        */
+        return default;
     }
 
     public void ShowHierachy()

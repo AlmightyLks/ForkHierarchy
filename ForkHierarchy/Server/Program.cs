@@ -24,6 +24,7 @@ builder.Services.Configure<DiscordOptions>(builder.Configuration.GetSection(Disc
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
+builder.Services.AddSwaggerGen();
 
 // Add services to the container.
 builder.Services.AddMudServices(config =>
@@ -102,6 +103,12 @@ using (var scope = app.Services.CreateScope())
 if (app.Environment.IsDevelopment())
 {
     app.UseWebAssemblyDebugging();
+    app.UseSwagger();
+    app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
+        options.RoutePrefix = string.Empty;
+    });
 }
 else
 {

@@ -2,16 +2,12 @@
 using Blazor.Diagrams.Core;
 using Blazor.Diagrams.Core.Models;
 using Blazor.Diagrams.Core.Models.Base;
-using Database;
-using Database.Models;
 using ForkHierarchy.Client.Components;
 using ForkHierarchy.Core.Helpers;
-using ForkHierarchy.Core.Mapping;
 using ForkHierarchy.Core.Models;
 using ForkHierarchy.Core.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
-using Microsoft.EntityFrameworkCore;
 using Octokit;
 using System;
 
@@ -29,13 +25,11 @@ public class HierarchyViewModel
     private RepositoryNodeModel? _originalRootNode;
     private List<int> _whitelistedNodeIds;
 
-    private ForkHierarchyContext _dbContext;
     private TreeBuilder<RepositoryNodeModel> _treeBuilder;
 
-    public HierarchyViewModel(GitHubHierarchyService gitHubHierarchyService, ForkHierarchyContext dbContext)
+    public HierarchyViewModel(GitHubHierarchyService gitHubHierarchyService)
     {
         HierarchyBuilder = gitHubHierarchyService;
-        _dbContext = dbContext;
         _treeBuilder = new TreeBuilder<RepositoryNodeModel>(RenderNode);
         _whitelistedNodeIds = new List<int>();
     }
@@ -126,6 +120,7 @@ public class HierarchyViewModel
 
     private async Task<bool> PrepareData(int id)
     {
+        /*
         var rootRepo = await _dbContext.GitHubRepositories.Include(x => x.Owner).FirstOrDefaultAsync(x => x.Id == id);
         if (rootRepo is null)
             return false;
@@ -139,6 +134,8 @@ public class HierarchyViewModel
         allNodes.Add(_originalRootNode);
 
         return ConnectNodes(allNodes);
+        */
+        return true;
     }
 
     private bool ConnectNodes(List<RepositoryNodeModel> nodes)
