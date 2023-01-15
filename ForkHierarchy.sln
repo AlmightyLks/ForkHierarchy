@@ -17,6 +17,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		README.md = README.md
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ForkHierarchy", "ForkHierarchy", "{B431A6DD-72CE-4132-B47C-2D80AD6AE22D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -42,6 +44,10 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{77D685C9-3159-4A88-8034-0322764F4767} = {B431A6DD-72CE-4132-B47C-2D80AD6AE22D}
+		{E783EA95-A79D-4FA2-A9EE-8507C56D7DD8} = {B431A6DD-72CE-4132-B47C-2D80AD6AE22D}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {7F8E60CD-D9A0-405C-87EE-CE7097084A62}
