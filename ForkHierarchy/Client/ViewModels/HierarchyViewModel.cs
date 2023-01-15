@@ -72,7 +72,7 @@ public class HierarchyViewModel
         Diagram.Links.Clear();
         Diagram.Nodes.Clear();
 
-        Diagram.SuspendRefresh = true;
+        //Diagram.SuspendRefresh = true;
 
         _whitelistedNodeIds.Clear();
         var whiteListBefore = Stopwatch.GetTimestamp();
@@ -92,7 +92,7 @@ public class HierarchyViewModel
         if (ResetPosition)
             Diagram.CenterOnNode(_originalRootNode, 1_500);
 
-        Diagram.SuspendRefresh = false;
+        //Diagram.SuspendRefresh = false;
 
         StateHasChanged?.Invoke();
     }
@@ -147,18 +147,6 @@ public class HierarchyViewModel
         _originalRootNode = new RepositoryNodeModel(rootRepo, RepositoryNode.Size);
 
         PrepareChildren(_originalRootNode);
-
-        /*
-        // Child Nodes
-        var allNodes = rootRepo.Children
-            .Select(child => new RepositoryNodeModel(child!, RepositoryNode.Size))
-            .ToList();
-        // Root Node
-        _originalRootNode = new RepositoryNodeModel(rootRepo!, RepositoryNode.Size);
-        allNodes.Add(_originalRootNode);
-
-        return ConnectNodes(allNodes);
-        */
     }
     public void PrepareChildren(RepositoryNodeModel node)
     {

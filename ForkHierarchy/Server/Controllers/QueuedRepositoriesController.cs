@@ -57,19 +57,4 @@ public class QueuedRepositoriesController : ControllerBase
         _dbContext.SaveChanges();
         return Ok();
     }
-
-    /*
-    // DELETE api/<QueuedRepositoriesController>/5
-    [HttpDelete("{id}")]
-    public async Task<IActionResult> DeleteAsync(string fullName)
-    {
-        var queuedRepository = await _dbContext.QueuedRepositories.FirstOrDefaultAsync(x => $"{x.Owner}/{x.Name}" == fullName);
-        if (queuedRepository is null)
-            return NotFound();
-
-        _dbContext.QueuedRepositories.Remove(queuedRepository);
-
-        return Ok();
-    }
-    */
 }
