@@ -32,10 +32,10 @@ public partial class Display
 
         if (firstRender)
         {
-            await Task.Delay(250);
-
-            ViewModel.Render();
-            StateHasChanged();
+            //await Task.Delay(250);
+            //
+            //ViewModel.Render();
+            //StateHasChanged();
         }
     }
 }
