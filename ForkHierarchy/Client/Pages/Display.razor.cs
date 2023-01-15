@@ -29,10 +29,18 @@ public partial class Display
 
         if (firstRender)
         {
-            await Task.Delay(500);
+            ViewModel.Diagram.ContainerChanged += DiagramReady;
 
             ViewModel.Render();
             StateHasChanged();
         }
+    }
+
+    private void DiagramReady()
+    {
+        ViewModel.Diagram.ContainerChanged -= DiagramReady;
+
+        ViewModel.Render();
+        StateHasChanged();
     }
 }

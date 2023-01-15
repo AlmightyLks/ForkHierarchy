@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Octokit;
 using System;
+using static MudBlazor.CategoryTypes;
 
 public class HierarchyViewModel
 {
@@ -36,7 +37,7 @@ public class HierarchyViewModel
         _apiClient = apiClient;
     }
 
-    public async Task<bool> InitializeAsync(int id)
+    public async Task InitializeAsync(int id)
     {
         var options = new DiagramOptions
         {
@@ -55,7 +56,7 @@ public class HierarchyViewModel
         Diagram.RegisterModelComponent<RepositoryNodeModel, RepositoryNode>();
         Diagram.MouseClick += Diagram_MouseClick;
 
-        return await PrepareData(id);
+        await PrepareData(id);
     }
 
     public void Render()
@@ -75,7 +76,7 @@ public class HierarchyViewModel
             Diagram.CenterOnNode(_originalRootNode, 1_500);
 
         Console.WriteLine(_originalRootNode.Id);
-        
+
         StateHasChanged?.Invoke();
     }
 
@@ -120,12 +121,17 @@ public class HierarchyViewModel
         }
     }
 
-    private async Task<bool> PrepareData(int id)
+    private async Task PrepareData(int id)
     {
         var rootRepo = await _apiClient.GitHubRepository.GetGitHubRepositoryByIdAsync(id);
         if (rootRepo is null)
-            return false;
+            return;
 
+        _originalRootNode = new RepositoryNodeModel(rootRepo, RepositoryNode.Size);
+
+        PrepareChildren(_originalRootNode);
+
+        /*
         // Child Nodes
         var allNodes = rootRepo.Children
             .Select(child => new RepositoryNodeModel(child!, RepositoryNode.Size))
@@ -135,30 +141,18 @@ public class HierarchyViewModel
         allNodes.Add(_originalRootNode);
 
         return ConnectNodes(allNodes);
+        */
     }
-
-    private bool ConnectNodes(List<RepositoryNodeModel> nodes)
+    public void PrepareChildren(RepositoryNodeModel node)
     {
-        var parentChildNodes = nodes.GroupBy(x => x.Item.ParentId);
-        foreach (var parentChildNode in parentChildNodes)
+        foreach (var child in node.Item.Children)
         {
-            if (parentChildNode.Key is null)
-                continue;
+            var childNodeModel = new RepositoryNodeModel(child, RepositoryNode.Size);
+            childNodeModel.Parent = node;
 
-            var parent = nodes.FirstOrDefault(x => x.Item.Id == parentChildNode.Key || (parentChildNode.Key is null && x.Item.ParentId is null));
-            // Found Children without parent...
-            if (parent is null)
-            {
-                // I guess we fail?
-                return false;
-            }
-            foreach (var child in parentChildNode)
-            {
-                child.Parent = parent;
-                parent.Children.Add(child);
-            }
+            node.Children.Add(childNodeModel);
+            PrepareChildren(childNodeModel);
         }
-        return true;
     }
 
     private void Diagram_MouseClick(Model model, MouseEventArgs arg2)
