@@ -3,15 +3,18 @@ using ForkHierarchy.Core.Jobs;
 using ForkHierarchy.Core.Options;
 using ForkHierarchy.Core.Services;
 using ForkHierarchy.Core.Sinks;
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using Microsoft.OpenApi.Models;
 using MudBlazor;
 using MudBlazor.Services;
 using Octokit;
 using Quartz;
 using Serilog;
 using Serilog.Events;
+using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,8 +26,8 @@ builder.Services.Configure<GitHubOptions>(builder.Configuration.GetSection(GitHu
 builder.Services.Configure<DiscordOptions>(builder.Configuration.GetSection(DiscordOptions.Discord));
 
 builder.Services.AddControllersWithViews();
-builder.Services.AddRazorPages();
 builder.Services.AddSwaggerGen();
+builder.Services.AddRazorPages();
 
 // Add services to the container.
 builder.Services.AddMudServices(config =>
@@ -39,8 +42,8 @@ builder.Services.AddMudServices(config =>
     config.SnackbarConfiguration.ShowTransitionDuration = 500;
     config.SnackbarConfiguration.SnackbarVariant = Variant.Filled;
 });
-builder.Services.AddRazorPages();
-builder.Services.AddServerSideBlazor();
+//builder.Services.AddRazorPages();
+//builder.Services.AddServerSideBlazor();
 builder.Services.AddDbContext<ForkHierarchyContext>(x =>
 {
     x.UseSqlite(builder.Configuration.GetValue<string>("ConnectionStrings:Default"));
@@ -103,11 +106,13 @@ using (var scope = app.Services.CreateScope())
 if (app.Environment.IsDevelopment())
 {
     app.UseWebAssemblyDebugging();
+
     app.UseSwagger();
     app.UseSwaggerUI(options =>
     {
         options.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
-        options.RoutePrefix = string.Empty;
+        //options.RoutePrefix = string.Empty;
+        options.DisplayOperationId();
     });
 }
 else
@@ -123,7 +128,6 @@ app.UseBlazorFrameworkFiles();
 app.UseStaticFiles();
 
 app.UseRouting();
-
 
 app.MapRazorPages();
 app.MapControllers();

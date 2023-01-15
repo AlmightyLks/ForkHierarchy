@@ -34,44 +34,52 @@
                 <MudText Typo="Typo.body2">@Node.Item.Stars</MudText>
             </MudCardContent>
 
-            @if (RepoState == State.Known)
+            <MudCardContent>
+                <MudText>Submitted at</MudText>
+                <MudText Typo="Typo.body2"><ToLocal DateTime="Node.Item.CreatedAt" Format="yyyy-mm-dd HH:MM:ss"></ToLocal></MudText>
+            </MudCardContent>
+
+            @*            @if (RepoState == State.Known)
             {
-                <MudCardContent>
-                    <MudText>Submitted at</MudText>
-                    <MudText Typo="Typo.body2"><ToLocal DateTime="DatabaseRepository.CreatedAt" Format="yyyy-mm-dd HH:MM:ss"></ToLocal></MudText>
-                </MudCardContent>
+            <MudCardContent>
+            <MudText>Submitted at</MudText>
+            <MudText Typo="Typo.body2"><ToLocal DateTime="DatabaseRepository.CreatedAt" Format="yyyy-mm-dd HH:MM:ss"></ToLocal></MudText>
+            </MudCardContent>
             }
             else if (RepoState == State.Queued)
             {
-                <MudCardContent>
-                    <MudText>Queued</MudText>
-                    <MudText Typo="Typo.body2">
-                        <ToLocal DateTime="DatabaseQueue.AddedAt" Format="yyyy-mm-dd HH:MM:ss"></ToLocal>
-                    </MudText>
-                </MudCardContent>
+            <MudCardContent>
+            <MudText>Queued</MudText>
+            <MudText Typo="Typo.body2">
+            <ToLocal DateTime="DatabaseQueue.AddedAt" Format="yyyy-mm-dd HH:MM:ss"></ToLocal>
+            </MudText>
+            </MudCardContent>
 
-                <MudCardContent>
-                    <MudText>Available (ETA)</MudText>
-                    <MudText Typo="Typo.body2">
-                        <ToLocal DateTime="CalculateETA()" Format="yyyy-mm-dd HH:MM:ss"></ToLocal>
-                    </MudText>
-                </MudCardContent>
-            }
+            <MudCardContent>
+            <MudText>Available (ETA)</MudText>
+            <MudText Typo="Typo.body2">
+            <ToLocal DateTime="CalculateETA()" Format="yyyy-mm-dd HH:MM:ss"></ToLocal>
+            </MudText>
+            </MudCardContent>
+            }*@
         </MudCard>
     </DialogContent>
 
     <DialogActions>
         <MudButton Color="Color.Error" OnClick="Cancel">Cancel</MudButton>
-        @if (RepoState == State.Known)
+        <MudButton Color="Color.Warning" OnClick="Submit">Refresh</MudButton>
+        <MudButton Color="Color.Warning" OnClick="Submit" Disabled="@((DateTime.UtcNow - Node.Item.CreatedAt) <= TimeSpan.FromHours(1))">Refresh</MudButton>
+        <MudButton Color="Color.Primary" OnClick="ShowHierachy">Show</MudButton>
+        @*        @if (RepoState == State.Known)
         {
-            //<MudButton Color="Color.Warning" OnClick="Submit">Refresh</MudButton>
-            <MudButton Color="Color.Warning" OnClick="Submit" Disabled="@((DateTime.UtcNow - DatabaseRepository.CreatedAt) <= TimeSpan.FromHours(1))">Refresh</MudButton>
-            <MudButton Color="Color.Primary" OnClick="ShowHierachy">Show</MudButton>
+        //<MudButton Color="Color.Warning" OnClick="Submit">Refresh</MudButton>
+        <MudButton Color="Color.Warning" OnClick="Submit" Disabled="@((DateTime.UtcNow - DatabaseRepository.CreatedAt) <= TimeSpan.FromHours(1))">Refresh</MudButton>
+        <MudButton Color="Color.Primary" OnClick="ShowHierachy">Show</MudButton>
         }
         else if (RepoState == State.Unknown)
         {
-            <MudButton Color="Color.Primary" OnClick="Submit">Submit</MudButton>
-        }
+        <MudButton Color="Color.Primary" OnClick="Submit">Submit</MudButton>
+        }*@
     </DialogActions>
 </MudDialog>
 

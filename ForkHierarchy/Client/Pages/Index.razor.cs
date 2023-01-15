@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.Options;
 using MudBlazor;
 using Octokit;
+using Refit;
 using System.Text.RegularExpressions;
 
 namespace ForkHierarchy.Client.Pages
@@ -22,8 +23,7 @@ namespace ForkHierarchy.Client.Pages
             CloseOnEscapeKey = true
         };
 
-        public string SearchText { get; set; }
-        public bool FromSource { get; set; }
+        public string FullNameSearch { get; set; }
 
         public Regex RepoFullNameRegEx { get; } = new Regex("^\\w+\\/\\w+$");
 
@@ -31,7 +31,7 @@ namespace ForkHierarchy.Client.Pages
         public NavigationManager NavigationManager { get; set; }
 
         [Inject]
-        public GitHubClient GitHubClient { get; set; }
+        public ForkHierarchyApiClient ApiClient { get; set; }
 
         [Inject]
         public IOptions<GitHubOptions> GitHubOptions { get; set; }
@@ -46,10 +46,10 @@ namespace ForkHierarchy.Client.Pages
 
         public async Task Search()
         {
-            if (String.IsNullOrWhiteSpace(SearchText))
+            if (String.IsNullOrWhiteSpace(FullNameSearch))
                 return;
-            
-            if (!RepoFullNameRegEx.IsMatch(SearchText))
+
+            if (!RepoFullNameRegEx.IsMatch(FullNameSearch))
             {
                 Snackbar.Add("Invalid Input", Severity.Error);
                 return;
@@ -57,69 +57,47 @@ namespace ForkHierarchy.Client.Pages
 
             _foundRepository = null;
 
-            var vals = SearchText.Split('/').TakeLast(2).ToArray();
+            var ownerRepoSplit = FullNameSearch.Split('/').TakeLast(2).ToArray();
+
+            // Search existing repos
             try
             {
-                var repo = await GitHubClient.Repository.Get(vals[0], vals[1]);
-                if (FromSource)
-                    repo = repo.Source ?? repo;
-
-                if (repo.ForksCount > GitHubOptions.Value.MaxForks)
-                {
-                    Snackbar.Add($"Target Repository Exceeds max allowed Forks of {GitHubOptions.Value.MaxForks}", Severity.Error);
-                    return;
-                }
-                var client = new ForkHierarchyApiClient(NavigationManager.BaseUri, null);
-                client.Git
-                
-                /*
-                var dbo = await DbContext.GitHubRepositories.Include(x => x.Owner).FirstOrDefaultAsync(x => x.FullName == SearchText);
-                var dto = dbo?.ToDto() ?? new GitHubRepository(repo);
-                _foundRepository = new RepositoryNodeModel(dto, RepositoryNode.Size);
-                */
-                await OpenDialogAsync();
+                var repo = await ApiClient.GitHubRepository.GetGitHubRepositoryByFullNameAsync(ownerRepoSplit[0], ownerRepoSplit[1]);
+                if (repo is not null)
+                    _foundRepository = new RepositoryNodeModel(repo, RepositoryNode.Size);
             }
-            catch (NotFoundException)
+            catch (ValidationApiException validationException) when (validationException.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
-                Snackbar.Add($"Could not find the target repository", Severity.Error);
+            }
+
+            // if repo isnt known, try queueing it
+            if (_foundRepository is null)
+            {
+                try
+                {
+                    await ApiClient.QueuedRepositories.CreateQueuedRepositoryAsync(ownerRepoSplit[0], ownerRepoSplit[1]);
+
+                    Snackbar.Add($"Repository Queued", Severity.Success);
+                }
+                catch(ValidationApiException validationException) when (validationException.StatusCode == System.Net.HttpStatusCode.Conflict)
+                {
+                    // Already queued
+                    Snackbar.Add($"Repository already queued", Severity.Warning);
+                }
+            }
+            // if repo was found, display it
+            else
+            {
+                await OpenDialogAsync();
             }
         }
 
         private async Task OpenDialogAsync()
         {
-            /*
-            var databaseRepository = await DbContext.GitHubRepositories.Include(x => x.Owner).FirstOrDefaultAsync(x => x.FullName == _foundRepository.Item.FullName);
-            var databaseQueue = await DbContext.QueuedRepositories.FirstOrDefaultAsync(x => x.Owner == _foundRepository.Item.Owner.Login && x.Name == _foundRepository.Item.Name);
-            var repoState = State.Unknown;
-
-            if (databaseRepository is not null)
-                repoState = State.Known;
-            else if (databaseQueue is not null)
-                repoState = State.Queued;
-            else
-                repoState = State.Unknown;
-
             var parameters = new DialogParameters();
             parameters.Add("Node", _foundRepository);
-            parameters.Add("DatabaseRepository", databaseRepository);
-            parameters.Add("DatabaseQueue", databaseQueue);
-            parameters.Add("RepoState", repoState);
 
-            var dialog = await Dialog.Show<FoundRepositoryComponent>("Found Repository Dialog", parameters, MaxWidthOptions).Result;
-
-            if (!dialog.Cancelled && repoState != State.Queued)
-            {
-                var queueItem = new Database.Models.QueuedRepository()
-                {
-                    Owner = _foundRepository.Item.Owner.Login,
-                    Name = _foundRepository.Item.Name,
-                    AddedAt = DateTime.UtcNow
-                };
-
-                DbContext.QueuedRepositories.Add(queueItem);
-                DbContext.SaveChanges();
-            }
-            */
+            await Dialog.Show<FoundRepositoryComponent>("Found Repository Dialog", parameters, MaxWidthOptions).Result;
         }
 
         public void Dispose()

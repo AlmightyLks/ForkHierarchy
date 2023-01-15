@@ -19,8 +19,9 @@ public class QueuedRepositoriesController : ControllerBase
     }
 
     // GET: api/<QueuedRepositoriesController>
-    [HttpGet]
+    [HttpGet("{fullName}")]
     [ProducesResponseType(typeof(QueuedRepository), (int)HttpStatusCode.OK)]
+    [ProducesResponseType((int)HttpStatusCode.NotFound)]
     public async Task<IActionResult> GetQueuedRepositoryAsync(string fullName)
     {
         var queuedRepository = await _dbContext.QueuedRepositories.FirstOrDefaultAsync(x => $"{x.Owner}/{x.Name}" == fullName);
@@ -31,9 +32,21 @@ public class QueuedRepositoriesController : ControllerBase
     }
 
     // POST api/<QueuedRepositoriesController>
-    [HttpPost]
-    public void PostQueuedRepository([FromBody] string owner, string repo)
+    [HttpPost("{owner}/{repo}")]
+    [ProducesResponseType((int)HttpStatusCode.OK)]
+    [ProducesResponseType((int)HttpStatusCode.Conflict)]
+    public IActionResult CreateQueuedRepository(string owner, string repo)
     {
+        /*
+        This is allowed: A refresh of an old dataset
+        TODO: Add Refresh Time?
+
+        if (_dbContext.GitHubRepositories.Any(x => x.FullName == $"{owner}/{repo}"))
+            return Conflict();
+        */
+        if (_dbContext.QueuedRepositories.Any(x => x.Owner == owner && x.Name == repo))
+            return Conflict();
+
         var queueItem = new Database.Models.QueuedRepository()
         {
             Owner = owner,
@@ -41,6 +54,8 @@ public class QueuedRepositoriesController : ControllerBase
             AddedAt = DateTime.UtcNow
         };
         _dbContext.QueuedRepositories.Add(queueItem);
+        _dbContext.SaveChanges();
+        return Ok();
     }
 
     /*

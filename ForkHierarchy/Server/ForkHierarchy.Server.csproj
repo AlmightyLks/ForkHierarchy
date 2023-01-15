@@ -32,6 +32,7 @@
 	<ItemGroup>
 		<ProjectReference Include="..\..\Database\Database.csproj" />
 		<ProjectReference Include="..\..\ForkHierarchy.Core\ForkHierarchy.Core.csproj" />
+		<ProjectReference Include="..\Client\ForkHierarchy.Client.csproj" />
 	</ItemGroup>
 
 </Project>

@@ -13,14 +13,8 @@ public partial class FoundRepositoryComponent
     [Parameter]
     public RepositoryNodeModel Node { get; set; }
 
-    [Parameter]
-    public GitHubRepository DatabaseRepository { get; set; }
-
-    [Parameter]
-    public QueuedRepository DatabaseQueue { get; set; }
-
-    [Parameter]
-    public State RepoState { get; set; }
+    //[Parameter]
+    //public State RepoState { get; set; }
 
     public DateTime CalculateETA()
     {
@@ -41,13 +35,15 @@ public partial class FoundRepositoryComponent
 
     public void ShowHierachy()
     {
-        NavigationManager.NavigateTo($"/Display/{DatabaseRepository.Id}");
+        NavigationManager.NavigateTo($"/Display/{Node.Item.Id}");
     }
 }
 
+/*
 public enum State
 {
     Unknown,
     Queued,
     Known
 }
+*/

@@ -2,6 +2,7 @@
 using Blazor.Diagrams.Core;
 using Blazor.Diagrams.Core.Models;
 using Blazor.Diagrams.Core.Models.Base;
+using ForkHierarchy.Client.Api;
 using ForkHierarchy.Client.Components;
 using ForkHierarchy.Core.Helpers;
 using ForkHierarchy.Core.Models;
@@ -13,7 +14,6 @@ using System;
 
 public class HierarchyViewModel
 {
-    public GitHubHierarchyService HierarchyBuilder { get; set; } = null!;
     public bool ResetPosition { get; set; } = true;
     public Diagram Diagram { get; set; } = null!;
     public bool Rendering { get; set; }
@@ -27,11 +27,13 @@ public class HierarchyViewModel
 
     private TreeBuilder<RepositoryNodeModel> _treeBuilder;
 
-    public HierarchyViewModel(GitHubHierarchyService gitHubHierarchyService)
+    private ForkHierarchyApiClient _apiClient;
+
+    public HierarchyViewModel(ForkHierarchyApiClient apiClient)
     {
-        HierarchyBuilder = gitHubHierarchyService;
         _treeBuilder = new TreeBuilder<RepositoryNodeModel>(RenderNode);
         _whitelistedNodeIds = new List<int>();
+        _apiClient = apiClient;
     }
 
     public async Task<bool> InitializeAsync(int id)
@@ -120,22 +122,19 @@ public class HierarchyViewModel
 
     private async Task<bool> PrepareData(int id)
     {
-        /*
-        var rootRepo = await _dbContext.GitHubRepositories.Include(x => x.Owner).FirstOrDefaultAsync(x => x.Id == id);
+        var rootRepo = await _apiClient.GitHubRepository.GetGitHubRepositoryByIdAsync(id);
         if (rootRepo is null)
             return false;
 
         // Child Nodes
-        var allNodes = (await _dbContext.GitHubRepositories.Include(x => x.Owner).Where(x => x.SourceId == id).ToListAsync())
-            .Select(x => new RepositoryNodeModel(x.ToDto()!, RepositoryNode.Size))
+        var allNodes = rootRepo.Children
+            .Select(child => new RepositoryNodeModel(child!, RepositoryNode.Size))
             .ToList();
         // Root Node
-        _originalRootNode = new RepositoryNodeModel(rootRepo.ToDto()!, RepositoryNode.Size);
+        _originalRootNode = new RepositoryNodeModel(rootRepo!, RepositoryNode.Size);
         allNodes.Add(_originalRootNode);
 
         return ConnectNodes(allNodes);
-        */
-        return true;
     }
 
     private bool ConnectNodes(List<RepositoryNodeModel> nodes)

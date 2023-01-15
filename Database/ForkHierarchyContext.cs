@@ -20,13 +20,5 @@ public class ForkHierarchyContext : DbContext
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ForkHierarchyContext).Assembly);
 
         base.OnModelCreating(modelBuilder);
-
-        /*
-        modelBuilder.Entity<Repository>()
-            .Property(b => b.Children)
-            .HasConversion(
-                v => JsonConvert.SerializeObject(v),
-                v => JsonConvert.DeserializeObject<Dictionary<string, string>>(v));
-        */
     }
 }

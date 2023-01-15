@@ -20,4 +20,13 @@ public partial class RepositoryNode
     public string Class { get; set; } = "";
     [Parameter]
     public string Style { get; set; } = "";
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        base.OnAfterRender(firstRender);
+        if (firstRender)
+        {
+
+        }
+    }
 }

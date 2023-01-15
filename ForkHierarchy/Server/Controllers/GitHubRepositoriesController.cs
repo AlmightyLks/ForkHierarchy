@@ -21,6 +21,7 @@ public class GitHubRepositoriesController : ControllerBase
 
     [HttpGet("{id}")]
     [ProducesResponseType(typeof(GitHubRepository), (int)HttpStatusCode.OK)]
+    [ProducesResponseType((int)HttpStatusCode.NotFound)]
     public async Task<IActionResult> GetGitHubRepositoryByIdAsync(int id)
     {
         var dto = await GetAsync(x => x.Id == id);
@@ -30,10 +31,12 @@ public class GitHubRepositoriesController : ControllerBase
         return Ok(dto);
     }
 
-    [HttpGet]
+    [HttpGet("{owner}/{repo}")]
     [ProducesResponseType(typeof(GitHubRepository), (int)HttpStatusCode.OK)]
-    public async Task<IActionResult> GetGitHubRepositoryByFullNameAsync(string fullName)
+    [ProducesResponseType((int)HttpStatusCode.NotFound)]
+    public async Task<IActionResult> GetGitHubRepositoryByFullNameAsync(string owner, string repo)
     {
+        string fullName = $"{owner}/{repo}";
         var dto = await GetAsync(x => x.FullName == fullName);
         if (dto is null)
             return NotFound();
@@ -57,7 +60,7 @@ public class GitHubRepositoriesController : ControllerBase
 
     private void AddChildrenFor(GitHubRepository dto)
     {
-        foreach (var child in _dbContext.GitHubRepositories.Where(x => x.ParentId == dto.Id))
+        foreach (var child in _dbContext.GitHubRepositories.Include(x => x.Owner).Where(x => x.ParentId == dto.Id))
         {
             var childDto = child.ToDto()!;
             AddChildrenFor(childDto);
