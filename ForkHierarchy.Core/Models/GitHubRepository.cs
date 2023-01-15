@@ -14,6 +14,7 @@ public class GitHubRepository
     public int Stars { get; set; }
     public bool IsFork { get; set; }
     public int ForksCount { get; set; }
+    public long CommitCount { get; set; }
     public DateTime LastCommit { get; set; }
     public DateTime CreatedAt { get; set; }
 

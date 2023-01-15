@@ -5,9 +5,11 @@
 # ForkHierarchy
 ![Lines of code](https://img.shields.io/tokei/lines/github/AlmightyLks/ForkHierarchy)
 
-Visualize and filter descendants of GitHub repositories
+Visualize and filter descendants of GitHub possibly abandoned repositories
 
 ## Description
+
+
 
 An in-depth paragraph about your project and overview of use.
 

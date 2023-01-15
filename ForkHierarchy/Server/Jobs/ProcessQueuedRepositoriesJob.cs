@@ -19,17 +19,20 @@ public class ProcessQueuedRepositoriesJob : IJob
     private readonly GitHubHierarchyService _gitHubHierarchyService;
     private readonly IOptions<GitHubOptions> _gitHubOptions;
     private readonly GitHubClient _gitHubClient;
+    private readonly IHttpClientFactory _httpClientFactory;
 
     public ProcessQueuedRepositoriesJob(
         ForkHierarchyContext dbContext,
         GitHubHierarchyService gitHubHierarchyService,
         IOptions<GitHubOptions> gitHubOptions,
-        GitHubClient gitHubClient)
+        GitHubClient gitHubClient,
+        IHttpClientFactory httpClientFactory)
     {
         _dbContext = dbContext;
         _gitHubHierarchyService = gitHubHierarchyService;
         _gitHubOptions = gitHubOptions;
         _gitHubClient = gitHubClient;
+        _httpClientFactory = httpClientFactory;
     }
 
     public async Task Execute(IJobExecutionContext context)

@@ -67,7 +67,6 @@
 
     <DialogActions>
         <MudButton Color="Color.Error" OnClick="Cancel">Cancel</MudButton>
-        <MudButton Color="Color.Warning" OnClick="Submit">Refresh</MudButton>
         <MudButton Color="Color.Warning" OnClick="Submit" Disabled="@((DateTime.UtcNow - Node.Item.CreatedAt) <= TimeSpan.FromHours(1))">Refresh</MudButton>
         <MudButton Color="Color.Primary" OnClick="ShowHierachy">Show</MudButton>
         @*        @if (RepoState == State.Known)

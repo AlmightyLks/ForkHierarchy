@@ -3,10 +3,12 @@ using ForkHierarchy.Core.Jobs;
 using ForkHierarchy.Core.Options;
 using ForkHierarchy.Core.Services;
 using ForkHierarchy.Core.Sinks;
+using ForkHierarchy.Server.Helper;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using Microsoft.Net.Http.Headers;
 using Microsoft.OpenApi.Models;
 using MudBlazor;
 using MudBlazor.Services;
@@ -15,6 +17,9 @@ using Quartz;
 using Serilog;
 using Serilog.Events;
 using System.Reflection;
+
+var client = new HttpClient();
+var foo = await client.GetCommitCountAsync("SynapseSL", "Synapse");
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,6 +30,12 @@ builder.Services.Configure<RateLimitOptions>(builder.Configuration.GetSection(Ra
 builder.Services.Configure<GitHubOptions>(builder.Configuration.GetSection(GitHubOptions.GitHub));
 builder.Services.Configure<DiscordOptions>(builder.Configuration.GetSection(DiscordOptions.Discord));
 
+builder.Services.AddHttpClient("GitHub", httpClient =>
+{
+    httpClient.BaseAddress = new Uri("https://api.github.com/");
+
+    client.DefaultRequestHeaders.TryAddWithoutValidation("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36");
+});
 builder.Services.AddControllersWithViews();
 builder.Services.AddSwaggerGen();
 builder.Services.AddRazorPages();

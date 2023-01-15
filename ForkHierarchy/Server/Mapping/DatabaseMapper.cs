@@ -19,6 +19,7 @@ public static class DatabaseMapper
             Owner = dto.Owner.ToDbo()!,
             ParentId = dto.ParentId,
             SourceId = dto.SourceId,
+            CommitCount = dto.CommitCount,
             LastCommit = dto.LastCommit,
             CreatedAt = dto.CreatedAt
         };
@@ -37,6 +38,7 @@ public static class DatabaseMapper
             Owner = dto.Owner.ToDto()!,
             ParentId = dto.ParentId,
             SourceId = dto.SourceId,
+            CommitCount = dto.CommitCount,
             LastCommit = dto.LastCommit,
             CreatedAt = dto.CreatedAt
         };
