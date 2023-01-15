@@ -9,6 +9,9 @@ public partial class Display
     public string? Id { get; set; }
 
     [Inject]
+    public ILogger<Display> Logger { get; set; } = null!;
+    
+    [Inject]
     public HierarchyViewModel ViewModel { get; set; } = null!;
 
     protected override async Task OnInitializedAsync()
@@ -17,7 +20,7 @@ public partial class Display
 
         if (int.TryParse(Id, out int id))
         {
-            await ViewModel.InitializeAsync(id);
+            await ViewModel.InitializeAsync(id, Logger);
         }
 
         await base.OnInitializedAsync();
@@ -29,18 +32,10 @@ public partial class Display
 
         if (firstRender)
         {
-            ViewModel.Diagram.ContainerChanged += DiagramReady;
+            await Task.Delay(250);
 
             ViewModel.Render();
             StateHasChanged();
         }
-    }
-
-    private void DiagramReady()
-    {
-        ViewModel.Diagram.ContainerChanged -= DiagramReady;
-
-        ViewModel.Render();
-        StateHasChanged();
     }
 }

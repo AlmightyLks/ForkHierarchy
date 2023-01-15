@@ -4,6 +4,7 @@ using Blazor.Diagrams.Core.Models;
 using Blazor.Diagrams.Core.Models.Base;
 using ForkHierarchy.Client.Api;
 using ForkHierarchy.Client.Components;
+using ForkHierarchy.Client.Pages;
 using ForkHierarchy.Core.Helpers;
 using ForkHierarchy.Core.Models;
 using ForkHierarchy.Core.Services;
@@ -11,10 +12,13 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Octokit;
 using System;
+using System.Diagnostics;
 using static MudBlazor.CategoryTypes;
 
 public class HierarchyViewModel
 {
+    private ILogger _logger = null!;
+
     public bool ResetPosition { get; set; } = true;
     public Diagram Diagram { get; set; } = null!;
     public bool Rendering { get; set; }
@@ -37,8 +41,9 @@ public class HierarchyViewModel
         _apiClient = apiClient;
     }
 
-    public async Task InitializeAsync(int id)
+    public async Task InitializeAsync(int id, ILogger logger)
     {
+        _logger = logger;
         var options = new DiagramOptions
         {
             DefaultNodeComponent = null, // Default component for nodes
@@ -67,15 +72,27 @@ public class HierarchyViewModel
         Diagram.Links.Clear();
         Diagram.Nodes.Clear();
 
-        _whitelistedNodeIds.Clear();
-        WhitelistFilteredNodes(_originalRootNode);
+        Diagram.SuspendRefresh = true;
 
+        _whitelistedNodeIds.Clear();
+        var whiteListBefore = Stopwatch.GetTimestamp();
+        WhitelistFilteredNodes(_originalRootNode);
+        var whiteListAfter = Stopwatch.GetTimestamp();
+
+        _logger.LogInformation($"Whitelisting took: {Stopwatch.GetElapsedTime(whiteListBefore, whiteListAfter)}");
+        StateHasChanged?.Invoke();
+
+        var calcPositionsBefore = Stopwatch.GetTimestamp();
         _treeBuilder.CalculateNodePositions(_originalRootNode);
+        var calcPositionsAfter = Stopwatch.GetTimestamp();
+
+        _logger.LogInformation($"Calculating Positions took: {Stopwatch.GetElapsedTime(calcPositionsBefore, calcPositionsAfter)}");
+        StateHasChanged?.Invoke();
 
         if (ResetPosition)
             Diagram.CenterOnNode(_originalRootNode, 1_500);
 
-        Console.WriteLine(_originalRootNode.Id);
+        Diagram.SuspendRefresh = false;
 
         StateHasChanged?.Invoke();
     }
