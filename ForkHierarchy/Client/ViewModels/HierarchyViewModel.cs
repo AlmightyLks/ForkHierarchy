@@ -1,7 +1,10 @@
-﻿using Blazor.Diagrams.Components;
+﻿using Blazor.Diagrams;
+using Blazor.Diagrams.Components;
 using Blazor.Diagrams.Core;
+using Blazor.Diagrams.Core.Anchors;
 using Blazor.Diagrams.Core.Models;
 using Blazor.Diagrams.Core.Models.Base;
+using Blazor.Diagrams.Options;
 using ForkHierarchy.Client.Api;
 using ForkHierarchy.Client.Components;
 using ForkHierarchy.Client.Pages;
@@ -20,7 +23,7 @@ public class HierarchyViewModel
     private ILogger _logger = null!;
 
     public bool ResetPosition { get; set; } = true;
-    public Diagram Diagram { get; set; } = null!;
+    public BlazorDiagram Diagram { get; set; } = null!;
     public bool Rendering { get; set; }
 
     public Filter Filter { get; } = new Filter();
@@ -44,22 +47,24 @@ public class HierarchyViewModel
     public async Task InitializeAsync(int id, ILogger logger)
     {
         _logger = logger;
-        var options = new DiagramOptions
+        var options = new BlazorDiagramOptions
         {
-            DefaultNodeComponent = null, // Default component for nodes
-            EnableVirtualization = false,
-            Zoom = new DiagramZoomOptions
+            Zoom =
             {
                 Minimum = 0.1, // Minimum zoom value
                 Maximum = 2_500, // Maximum zoom value
                 ScaleFactor = 1.45,
                 Inverse = true, // Whether to inverse the direction of the zoom when using the wheel
                                 // Other
+            },
+            Virtualization =
+            {
+                Enabled = false
             }
         };
-        Diagram = new Diagram(options);
-        Diagram.RegisterModelComponent<RepositoryNodeModel, RepositoryNode>();
-        Diagram.MouseClick += Diagram_MouseClick;
+        Diagram = new BlazorDiagram(options);
+        Diagram.RegisterComponent<RepositoryNodeModel, RepositoryNode>();
+        Diagram.PointerClick += Diagram_PointerClick;
 
         await PrepareData(id);
     }
@@ -132,8 +137,13 @@ public class HierarchyViewModel
             {
                 TargetMarker = LinkMarker.Arrow
             };
-            link.SetSourcePort(current.Parent.GetPort(PortAlignment.Bottom));
-            link.SetTargetPort(current.GetPort(PortAlignment.Top));
+
+            if (current.Parent.GetPort(PortAlignment.Bottom) is { } sourcePort)
+                link.SetSource(new SinglePortAnchor(sourcePort));
+
+            if (current.GetPort(PortAlignment.Top) is { } targetPort)
+                link.SetTarget(new SinglePortAnchor(targetPort));
+
             Diagram.Links.Add(link);
         }
     }
@@ -160,7 +170,7 @@ public class HierarchyViewModel
         }
     }
 
-    private void Diagram_MouseClick(Model model, MouseEventArgs arg2)
+    private void Diagram_PointerClick(Model? model, Blazor.Diagrams.Core.Events.PointerEventArgs arg2)
     {
         if (arg2.Button == 0 && model is NodeModel nodeModel)
         {

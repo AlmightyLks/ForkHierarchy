@@ -18,8 +18,9 @@ using Serilog;
 using Serilog.Events;
 using System.Reflection;
 
-var client = new HttpClient();
-var foo = await client.GetCommitCountAsync("SynapseSL", "Synapse");
+//var client = new HttpClient();
+//client.DefaultRequestHeaders.TryAddWithoutValidation("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36");
+//var foo = await client.GetCommitCountAsync("SynapseSL", "Synapse");
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -33,8 +34,8 @@ builder.Services.Configure<DiscordOptions>(builder.Configuration.GetSection(Disc
 builder.Services.AddHttpClient("GitHub", httpClient =>
 {
     httpClient.BaseAddress = new Uri("https://api.github.com/");
+    httpClient.DefaultRequestHeaders.TryAddWithoutValidation("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36");
 
-    client.DefaultRequestHeaders.TryAddWithoutValidation("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36");
 });
 builder.Services.AddControllersWithViews();
 builder.Services.AddSwaggerGen();

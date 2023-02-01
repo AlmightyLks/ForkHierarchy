@@ -39,8 +39,8 @@ public class RepositoryNodeModel : NodeModel
         this.Item = item;
         this.Parent = null;
         Children = new List<RepositoryNodeModel>();
-        AddPort(new NodePort(this, PortAlignment.Top));
-        AddPort(new NodePort(this, PortAlignment.Bottom));
+        AddPort(new PortModel(this, PortAlignment.Top));
+        AddPort(new PortModel(this, PortAlignment.Bottom));
         Opacity = 1;
         Size = size;
     }
@@ -49,8 +49,8 @@ public class RepositoryNodeModel : NodeModel
         this.Item = item;
         this.Parent = parent;
         Children = children;
-        AddPort(new NodePort(this, PortAlignment.Top));
-        AddPort(new NodePort(this, PortAlignment.Bottom));
+        AddPort(new PortModel(this, PortAlignment.Top));
+        AddPort(new PortModel(this, PortAlignment.Bottom));
         Opacity = 1;
         Size = size;
     }
